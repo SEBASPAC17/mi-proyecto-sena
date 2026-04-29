@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Confirmar correo - Dinamicash Wallet</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <div class="login-container">
+    <div class="brand-title brand-title-login">
+      <img class="section-logo" src="assets/logo-mark-dw.svg" alt="Dinamicash Wallet">
+      <div class="brand-copy">
+        <h1>Dinamicash Wallet</h1>
+        <p class="brand-subtitle">Controla tus gastos, toma el control</p>
+      </div>
+    </div>
+    <div class="card">
+      <h2 id="titulo">Confirmando correo</h2>
+      <p id="estado" style="color:#94a3b8;font-size:14px;">Estamos validando tu enlace...</p>
+      <button type="button" onclick="window.location.href='login.html'" id="volverBtn" style="display:none;">Ir a login</button>
+    </div>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script src="api.js"></script>
+  <script>
+    const API_URL = window.DinamicashApi?.getBaseUrl?.() || "http://localhost:3000";
+    const lang = window.DinamicashI18n?.getPreferredLanguage?.() || "es";
+    const texts = {
+      es: {
+        title: "Confirmando correo",
+        loading: "Estamos validando tu enlace...",
+        success: "Correo confirmado. Ya puedes iniciar sesión.",
+        invalid: "El enlace no es válido o ya venció.",
+        missing: "No encontramos un token válido en el enlace.",
+        back: "Ir a login"
+      },
+      en: {
+        title: "Confirming email",
+        loading: "We are validating your link...",
+        success: "Email confirmed. You can now sign in.",
+        invalid: "The link is invalid or has expired.",
+        missing: "No valid token was found in the link.",
+        back: "Go to login"
+      },
+      pt: {
+        title: "Confirmando e-mail",
+        loading: "Estamos validando seu link...",
+        success: "E-mail confirmado. Agora você pode entrar.",
+        invalid: "O link é inválido ou expirou.",
+        missing: "Nenhum token válido foi encontrado no link.",
+        back: "Ir para o login"
+      }
+    }[lang] || {
+      title: "Confirmando correo",
+      loading: "Estamos validando tu enlace...",
+      success: "Correo confirmado. Ya puedes iniciar sesión.",
+      invalid: "El enlace no es válido o ya venció.",
+      missing: "No encontramos un token válido en el enlace.",
+      back: "Ir a login"
+    };
+
+    document.documentElement.lang = lang;
+    document.title = `${texts.title} - Dinamicash Wallet`;
+    document.getElementById("titulo").textContent = texts.title;
+    document.getElementById("estado").textContent = texts.loading;
+    document.getElementById("volverBtn").textContent = texts.back;
+
+    async function verificarCorreo() {
+      const token = new URLSearchParams(window.location.search).get("token");
+      const estado = document.getElementById("estado");
+      const volverBtn = document.getElementById("volverBtn");
+
+      if (!token) {
+        estado.textContent = texts.missing;
+        volverBtn.style.display = "block";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/verificar-correo`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token })
+        });
+        const data = await res.json();
+
+        estado.textContent = data.mensaje || (res.ok ? texts.success : texts.invalid);
+        volverBtn.style.display = "block";
+      } catch (error) {
+        console.error(error);
+        estado.textContent = texts.invalid;
+        volverBtn.style.display = "block";
+      }
+    }
+
+    verificarCorreo();
+  </script>
+</body>
+</html>

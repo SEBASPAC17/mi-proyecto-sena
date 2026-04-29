@@ -1,0 +1,56 @@
+    
+    INSTRUMENTO DE EVALUACI�N 
+    
+    1. DATOS GENERALES 
+    Programa de formaci�n 
+    An�lisis y desarrollo de software 
+    Proyecto formativo 
+    Construcci�n de software integrador de tecnolog�as orientadas a servicios. 
+    Fase proyecto 
+    Ejecuci�n 
+    Resultado de aprendizaje 
+    220501096-03 - Crear componentes front-end del software de acuerdo con el dise�o. 
+    Actividad de aprendizaje 
+    GA6-220501096-AA4 - Generar plantillas y estilos, de acuerdo con el dise�o. 
+    Evidencia de producto 
+    Dise�o front-end que cumpla con los requerimientos del proyecto.  
+    GA6-220501096-AA4-EV03. 
+    
+    Criterio de evaluaci�n 
+    Genera plantillas y estilos de acuerdo con el dise�o establecido. 
+    
+    2. LISTA DE CHEQUEO 
+    No. 
+    VARIABLES/INDICADORES DE LOGRO 
+    CUMPLE 
+    Observaciones 
+
+
+    S� 
+    NO 
+
+    1. 
+    Crea el dise�o front-end seg�n requerimientos del proyecto.  
+    
+    
+    
+    2. 
+    Aplica los componentes seleccionados en la Evidencia GA6-220501096-AA3-EV02. 
+    
+    
+    
+    3. 
+    El dise�o front-end es usable.  
+    
+    
+    
+    4. 
+    Aplica el dise�o de interfaz realizado anteriormente. 
+    
+    
+    
+    
+    3. EVALUACI�N 
+    Observaciones: __________________________________________________________ 
+    Juicio de valor: __________________________________________________________ 
+    

@@ -1,0 +1,2260 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title id="pageTitle">Dinamicash Wallet</title>
+  <link rel="stylesheet" href="estilos.css">
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --text-primary: #ffffff;
+      --text-secondary: #94a3b8;
+      --accent: #22c55e;
+      --bg-main: var(--bg-primary);
+      --bg-card: var(--bg-secondary);
+      --bg-card-soft: rgba(51, 65, 85, 0.78);
+      --bg-card-hover: #273449;
+      --bg-menu: rgba(15, 23, 42, 0.92);
+      --text-main: var(--text-primary);
+      --text-soft: #cbd5e1;
+      --text-muted: var(--text-secondary);
+      --text-faint: #64748b;
+      --border-soft: rgba(148, 163, 184, 0.18);
+      --shadow-soft: 0 10px 24px rgba(0, 0, 0, 0.22);
+      --accent-soft: rgba(34, 197, 94, 0.16);
+      --danger-soft: rgba(127, 29, 29, 0.12);
+      --danger-border: rgba(248, 113, 113, 0.7);
+      --danger-text: #f87171;
+      --overlay: rgba(0, 0, 0, 0.6);
+    }
+
+    body.light-mode,
+    body.theme-light {
+      --bg-primary: #f1f5f9;
+      --bg-secondary: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #64748b;
+      --accent: #16a34a;
+      --bg-main: var(--bg-primary);
+      --bg-card: var(--bg-secondary);
+      --bg-card-soft: #f1f5f9;
+      --bg-card-hover: #e2e8f0;
+      --bg-menu: rgba(255, 255, 255, 0.96);
+      --text-main: var(--text-primary);
+      --text-soft: #334155;
+      --text-muted: var(--text-secondary);
+      --text-faint: #64748b;
+      --border-soft: rgba(100, 116, 139, 0.22);
+      --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.12);
+      --overlay: rgba(15, 23, 42, 0.55);
+    }
+
+    .pantalla {
+      width: min(100%, 1080px);
+      margin: 0 auto;
+      padding: 20px 16px 110px;
+      box-sizing: border-box;
+    }
+
+    .panel-grid,
+    .contenedor-reportes,
+    #listaMetas {
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel-grid {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .contenedor-reportes {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      align-items: start;
+    }
+
+    #listaMetas {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .card,
+    .meta-card,
+    .renta-card,
+    .renta-resultado,
+    .renta-info-card,
+    .categoria-top-card {
+      width: auto;
+      max-width: none;
+    }
+
+    .meta-card,
+    .renta-card,
+    .renta-resultado,
+    .renta-info-card,
+    .categoria-top-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .filtro-rango {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .filtro-rango .filtro-acciones {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .filtro-rango button {
+      margin-top: 0;
+    }
+
+    .resumen-icono,
+    .lista-icono {
+      font-size: 18px;
+      margin-right: 8px;
+    }
+
+    .movimiento-titulo,
+    .top-categoria-titulo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .top-categorias-lista {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .top-categoria-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: rgba(51, 65, 85, 0.7);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .top-categoria-nombre {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .screen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .screen-header-copy h2 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 34px);
+      letter-spacing: -0.03em;
+    }
+
+    .screen-header-copy p {
+      margin: 8px 0 0;
+      color: var(--text-muted);
+      max-width: 620px;
+      line-height: 1.55;
+    }
+
+    .report-shell {
+      position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      padding: 22px;
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 32%),
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.18), transparent 28%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.86));
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      box-shadow: 0 30px 70px rgba(2, 6, 23, 0.5);
+    }
+
+    .report-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 36%),
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.06), transparent 22%);
+      pointer-events: none;
+    }
+
+    .report-shell > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .report-toolbar {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .report-toolbar-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .report-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.56);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      color: #dbeafe;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-weight: 700;
+    }
+
+    .report-actions-inline {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filtro-rango {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 0;
+      padding: 14px;
+      border-radius: 22px;
+      background: rgba(15, 23, 42, 0.68);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      backdrop-filter: blur(16px);
+    }
+
+    .filtro-rango input,
+    .filtro-rango select {
+      min-height: 46px;
+      border-radius: 14px;
+      background: rgba(30, 41, 59, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+    }
+
+    .filtro-rango input:focus,
+    .filtro-rango select:focus,
+    button:focus-visible {
+      outline: none;
+      border-color: rgba(34, 197, 94, 0.7);
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+    }
+
+    .filtro-rango .filtro-acciones {
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    button {
+      min-height: 44px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.96));
+      color: var(--text-main);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      box-shadow: 0 10px 24px rgba(2, 6, 23, 0.22);
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(34, 197, 94, 0.28);
+      box-shadow: 0 14px 28px rgba(2, 6, 23, 0.3);
+    }
+
+    body.light-mode button,
+    body.theme-light button {
+      background: linear-gradient(180deg, #f8fafc, #e2e8f0);
+      color: var(--text-main);
+      border-color: rgba(100, 116, 139, 0.22);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    body.light-mode button:hover,
+    body.theme-light button:hover {
+      border-color: rgba(22, 163, 74, 0.28);
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12);
+    }
+
+    .btn-accent {
+      background: linear-gradient(135deg, #22c55e, #14b8a6);
+      color: #03130b;
+      border-color: transparent;
+      box-shadow: 0 12px 26px rgba(20, 184, 166, 0.28);
+    }
+
+    .btn-ghost {
+      background: rgba(30, 41, 59, 0.72);
+      color: var(--text-soft);
+    }
+
+    body.light-mode .btn-ghost,
+    body.theme-light .btn-ghost {
+      background: #e2e8f0;
+      color: var(--text-main);
+    }
+
+    .report-grid-primary,
+    .report-grid-secondary {
+      display: grid;
+      gap: 16px;
+    }
+
+    .report-grid-primary {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      margin-bottom: 16px;
+    }
+
+    .report-grid-secondary {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .report-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 100%;
+      border-radius: 24px;
+      padding: 20px;
+      background:
+        linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.96));
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      box-shadow: 0 18px 36px rgba(2, 6, 23, 0.28);
+    }
+
+    .report-card::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent);
+      opacity: .7;
+    }
+
+    body.light-mode .report-shell,
+    body.theme-light .report-shell {
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.08), transparent 32%),
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.1), transparent 28%),
+        linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.98));
+      border-color: rgba(100, 116, 139, 0.16);
+      box-shadow: 0 24px 54px rgba(15, 23, 42, 0.08);
+    }
+
+    body.light-mode .report-kicker,
+    body.theme-light .report-kicker {
+      background: rgba(226, 232, 240, 0.95);
+      border-color: rgba(100, 116, 139, 0.18);
+      color: var(--text-soft);
+    }
+
+    body.light-mode .filtro-rango,
+    body.theme-light .filtro-rango {
+      background: rgba(226, 232, 240, 0.96);
+      border-color: rgba(100, 116, 139, 0.14);
+    }
+
+    body.light-mode .filtro-rango input,
+    body.light-mode .filtro-rango select,
+    body.theme-light .filtro-rango input,
+    body.theme-light .filtro-rango select {
+      background: #ffffff;
+      border-color: rgba(100, 116, 139, 0.18);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    body.light-mode .report-card,
+    body.theme-light .report-card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.98));
+      border-color: rgba(100, 116, 139, 0.14);
+      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+    }
+
+    body.light-mode .metric-tile,
+    body.theme-light .metric-tile {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+      border-color: rgba(100, 116, 139, 0.12);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .report-card-hero {
+      grid-column: span 4;
+    }
+
+    .report-card-chart {
+      grid-column: span 4;
+    }
+
+    .report-card-list {
+      grid-column: span 4;
+    }
+
+    .report-card-wide {
+      grid-column: span 12;
+    }
+
+    .report-card-balance,
+    .report-card-donut,
+    .report-card-top {
+      grid-column: span 12;
+    }
+
+    .report-card-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .report-card-title h3 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .report-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.12);
+      color: #86efac;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .metric-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .metric-tile {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.58);
+      border: 1px solid rgba(148, 163, 184, 0.08);
+    }
+
+    .metric-label {
+      margin: 0 0 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 700;
+    }
+
+    .metric-value {
+      margin: 0;
+      font-size: clamp(22px, 2.4vw, 34px);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .metric-value-positive {
+      color: #4ade80;
+    }
+
+    .metric-value-negative {
+      color: #f87171;
+    }
+
+    .metric-caption {
+      margin-top: 8px;
+      color: var(--text-faint);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .top-categorias-lista {
+      gap: 10px;
+      margin-top: 0;
+    }
+
+    .top-categoria-item {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(15, 23, 42, 0.56);
+      border: 1px solid rgba(148, 163, 184, 0.08);
+    }
+
+    .top-categoria-item strong {
+      white-space: nowrap;
+      font-size: 14px;
+    }
+
+    .top-categoria-nombre {
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .chart-frame {
+      min-height: 260px;
+      padding: 10px;
+      border-radius: 20px;
+      background: radial-gradient(circle at top, rgba(59, 130, 246, 0.08), transparent 48%), rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(148, 163, 184, 0.08);
+    }
+
+    .chart-frame canvas {
+      width: 100% !important;
+      height: 240px !important;
+    }
+
+    body.light-mode .top-categoria-item,
+    body.theme-light .top-categoria-item {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+      border-color: rgba(100, 116, 139, 0.12);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    }
+
+    body.light-mode .chart-frame,
+    body.theme-light .chart-frame {
+      background:
+        radial-gradient(circle at top, rgba(59, 130, 246, 0.06), transparent 52%),
+        linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.98));
+      border-color: rgba(100, 116, 139, 0.12);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .summary-mini {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.52);
+      border: 1px solid rgba(148, 163, 184, 0.08);
+      min-width: 0;
+    }
+
+    body.light-mode .summary-mini,
+    body.theme-light .summary-mini {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+      border-color: rgba(100, 116, 139, 0.12);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    }
+
+    .summary-mini span {
+      display: block;
+      color: var(--text-muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 8px;
+    }
+
+    .summary-mini strong {
+      display: block;
+      font-size: clamp(18px, 1.2vw, 22px);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      word-break: break-word;
+      font-variant-numeric: tabular-nums;
+    }
+
+    body {
+      background: var(--bg-main);
+      color: var(--text-main);
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    body input,
+    body select,
+    body textarea {
+      background: var(--bg-card-soft);
+      color: var(--text-main);
+      border: 1px solid var(--border-soft);
+    }
+
+    body input::placeholder,
+    body textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    body li,
+    body .card,
+    body .modal-content {
+      background: var(--bg-card);
+      color: var(--text-main);
+    }
+
+    .menu.menu-pro {
+      left: 50%;
+      bottom: 14px;
+      width: auto;
+      gap: 8px;
+      padding: 10px 14px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 20px;
+      background: var(--bg-menu);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+      transform: translateX(-50%);
+      z-index: 30;
+    }
+
+    .menu.menu-pro .menu-item {
+      width: 64px;
+      margin-top: 0;
+      padding: 8px 4px;
+      border-radius: 14px;
+      color: #94a3b8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .menu.menu-pro .menu-item:hover {
+      transform: translateY(-1px);
+      background: rgba(51, 65, 85, 0.85);
+    }
+
+    .menu.menu-pro .menu-item.activo {
+      background: rgba(34, 197, 94, 0.18);
+      color: #22c55e;
+      box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.18);
+    }
+
+    .menu-icono {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+
+    .menu-texto {
+      line-height: 1.1;
+      text-align: center;
+    }
+
+    .fab-stack {
+      position: fixed;
+      right: 14px;
+      bottom: 18px;
+      z-index: 31;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .fab-menu {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(8px) scale(0.96);
+      transform-origin: bottom right;
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .fab-stack.open .fab-menu {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .fab-option {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 12px;
+      width: 176px;
+      min-height: 44px;
+      padding: 12px 16px;
+      box-sizing: border-box;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15, 23, 42, 0.94);
+      color: var(--text-main);
+      box-shadow: 0 16px 32px rgba(2, 6, 23, 0.32);
+      backdrop-filter: blur(14px);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .fab-option-icon {
+      display: inline-flex;
+      width: 24px;
+      height: 24px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.14);
+      color: #86efac;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .fab-option-label {
+      display: block;
+      min-width: 0;
+      flex: 1 1 auto;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .fab-main {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+      color: var(--text-main);
+      display: grid;
+      place-items: center;
+      padding: 0;
+      margin-top: 0;
+      box-shadow: 0 18px 36px rgba(2, 6, 23, 0.36);
+      font-size: 20px;
+      z-index: 32;
+    }
+
+    .fab-main svg {
+      width: 22px;
+      height: 22px;
+      transition: transform .2s ease;
+    }
+
+    .fab-stack.open .fab-main svg {
+      transform: rotate(45deg);
+    }
+
+    body.theme-light .fab-main,
+    body.theme-light .fab-option {
+      background: rgba(255, 255, 255, 0.96);
+      color: #334155;
+      border-color: rgba(100, 116, 139, 0.28);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+    }
+
+    .onboarding-layer[hidden] {
+      display: none;
+    }
+
+    .onboarding-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 9500;
+      pointer-events: none;
+    }
+
+    .onboarding-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.8);
+      pointer-events: auto;
+      transition: background .24s ease;
+    }
+
+    .onboarding-highlight {
+      position: fixed;
+      border-radius: 22px;
+      border: 2px solid rgba(74, 222, 128, 0.96);
+      box-shadow:
+        0 0 0 4px rgba(34, 197, 94, 0.16),
+        0 0 28px rgba(34, 197, 94, 0.35),
+        0 24px 60px rgba(2, 6, 23, 0.42);
+      opacity: 0;
+      transform: scale(.985);
+      transition: left .26s ease, top .26s ease, width .26s ease, height .26s ease, opacity .2s ease, transform .2s ease;
+      z-index: 9501;
+      pointer-events: none;
+    }
+
+    .onboarding-highlight:not([hidden]) {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .onboarding-focus-target {
+      position: relative !important;
+      z-index: 9501 !important;
+      isolation: isolate;
+      filter: none !important;
+      opacity: 1 !important;
+      transition: box-shadow .22s ease, transform .22s ease;
+      box-shadow:
+        0 0 0 2px rgba(74, 222, 128, 0.92),
+        0 0 0 8px rgba(34, 197, 94, 0.16),
+        0 20px 44px rgba(2, 6, 23, 0.34) !important;
+      transform: translateZ(0);
+    }
+
+    .onboarding-card {
+      position: fixed;
+      width: min(340px, calc(100vw - 24px));
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+      color: #f8fafc;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 18px 45px rgba(2, 6, 23, 0.45);
+      z-index: 9502;
+      pointer-events: auto;
+    }
+
+    body.theme-light .onboarding-card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.98));
+      color: #0f172a;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+    }
+
+    .onboarding-card::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: inherit;
+      border-left: 1px solid rgba(148, 163, 184, 0.2);
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+      transform: rotate(45deg);
+    }
+
+    .onboarding-card[data-placement="bottom"]::after {
+      top: -9px;
+      left: calc(var(--arrow-left, 50%) - 9px);
+    }
+
+    .onboarding-card[data-placement="top"]::after {
+      bottom: -9px;
+      left: calc(var(--arrow-left, 50%) - 9px);
+      transform: rotate(225deg);
+    }
+
+    .onboarding-card[data-placement="center"]::after {
+      display: none;
+    }
+
+    .onboarding-kicker {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #86efac;
+      margin-bottom: 8px;
+    }
+
+    .onboarding-title {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    .onboarding-body {
+      margin: 0;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    body.theme-light .onboarding-body {
+      color: #334155;
+    }
+
+    .onboarding-progress {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .onboarding-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .onboarding-actions button {
+      margin-top: 0;
+    }
+
+    .onboarding-secondary {
+      background: transparent;
+      color: #cbd5e1;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    body.theme-light .onboarding-secondary {
+      color: #334155;
+    }
+
+    .loader-tip-wrap {
+      max-width: 340px;
+      margin-top: 18px;
+      text-align: center;
+      color: var(--text-soft);
+      padding: 0 18px;
+    }
+
+    .loader-tip-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #22c55e;
+      margin-bottom: 6px;
+    }
+
+    .loader-tip {
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .renta-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .alerta-renta {
+      background: rgba(245, 158, 11, 0.14);
+      border: 1px solid rgba(245, 158, 11, 0.28);
+      color: #fde68a;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 16px;
+      line-height: 1.45;
+    }
+
+    body.theme-light .alerta-renta {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(217, 119, 6, 0.28);
+      color: #92400e;
+    }
+
+    .renta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .campo-renta {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .campo-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-soft);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .campo-ayuda-btn {
+      width: 22px;
+      height: 22px;
+      min-width: 22px;
+      min-height: 22px;
+      border-radius: 50%;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(51, 65, 85, 0.85);
+      color: #fde68a;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-grid;
+      place-items: center;
+      padding: 0;
+      margin-top: 0;
+      line-height: 1;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    body.theme-light .campo-ayuda-btn {
+      background: #475569;
+      color: #f8fafc;
+      border-color: rgba(71, 85, 105, 0.35);
+    }
+
+    .campo-ayuda {
+      display: none;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      border-radius: 12px;
+      color: var(--text-soft);
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    body.theme-light .campo-ayuda {
+      background: #e2e8f0;
+      border-color: rgba(100, 116, 139, 0.22);
+      color: #334155;
+    }
+
+    .campo-ayuda.activa {
+      display: block;
+    }
+
+    .renta-resumen {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .renta-resumen .resumen-item {
+      background: rgba(51, 65, 85, 0.78);
+      border-radius: 14px;
+      padding: 12px;
+      min-height: 74px;
+    }
+
+    .renta-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .renta-actions button {
+      width: auto;
+      min-width: 210px;
+      margin-top: 0;
+    }
+
+    .resumen-label {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .resumen-valor {
+      color: var(--text-main);
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    body.theme-light .renta-resumen .resumen-item {
+      background: #cbd5e1;
+      border: 1px solid rgba(100, 116, 139, 0.22);
+    }
+
+    .renta-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+
+    .renta-chip.warning {
+      background: rgba(245, 158, 11, 0.16);
+      color: #fcd34d;
+    }
+
+    body.theme-light .renta-chip.warning {
+      background: rgba(245, 158, 11, 0.18);
+      color: #92400e;
+      border: 1px solid rgba(217, 119, 6, 0.24);
+    }
+
+    .renta-chip.success {
+      background: rgba(34, 197, 94, 0.16);
+      color: #86efac;
+    }
+
+    body.theme-light .renta-chip.success {
+      background: rgba(34, 197, 94, 0.14);
+      color: #166534;
+      border: 1px solid rgba(22, 163, 74, 0.22);
+    }
+
+    .renta-chip.info {
+      background: rgba(59, 130, 246, 0.16);
+      color: #93c5fd;
+    }
+
+    body.theme-light .renta-chip.info {
+      background: rgba(59, 130, 246, 0.14);
+      color: #1d4ed8;
+      border: 1px solid rgba(37, 99, 235, 0.2);
+    }
+
+    .renta-nota {
+      color: var(--text-soft);
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    body.theme-light .renta-nota,
+    body.theme-light .renta-info-card ul {
+      color: #334155;
+    }
+
+    .renta-info-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--text-soft);
+      line-height: 1.5;
+    }
+
+    .categoria-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .mini-note {
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .perfil-panel {
+      display: grid;
+      gap: 16px;
+    }
+
+    .perfil-resumen-card,
+    .perfil-menu-item,
+    .perfil-logout,
+    .perfil-extra-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .perfil-resumen-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .perfil-avatar {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      background: #22c55e;
+      color: var(--text-main);
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .perfil-datos {
+      min-width: 0;
+    }
+
+    .perfil-nombre {
+      margin: 0 0 4px;
+      color: #f8fafc;
+      font-size: 20px;
+    }
+
+    body.theme-light .perfil-nombre {
+      color: #0f172a;
+    }
+
+    .perfil-correo {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 14px;
+      word-break: break-word;
+    }
+
+    .perfil-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .perfil-stat {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .perfil-stat-valor {
+      color: #22c55e;
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .perfil-stat-label {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    .perfil-menu {
+      display: grid;
+      gap: 12px;
+    }
+
+    .perfil-menu-item {
+      width: 100%;
+      border: none;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: 0.25s;
+    }
+
+    .perfil-menu-item:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .perfil-menu-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .perfil-menu-icono {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: rgba(34, 197, 94, 0.12);
+      color: #22c55e;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .perfil-menu-texto strong {
+      display: block;
+      color: var(--text-main);
+      font-size: 15px;
+    }
+
+    .perfil-menu-texto span {
+      display: block;
+      margin-top: 2px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .perfil-menu-flecha {
+      color: var(--text-muted);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .perfil-extra-card {
+      padding: 16px;
+    }
+
+    .perfil-extra-card h3 {
+      margin-top: 0;
+    }
+
+    .perfil-logout {
+      width: 100%;
+      background: var(--danger-soft);
+      color: var(--danger-text);
+      border: 1px solid var(--danger-border);
+    }
+
+    .perfil-logout:hover {
+      background: rgba(127, 29, 29, 0.24);
+    }
+
+    .perfil-version {
+      margin: 0;
+      text-align: center;
+      color: var(--text-faint);
+      font-size: 12px;
+    }
+
+    .modal,
+    .modal-overlay {
+      background: var(--overlay);
+      backdrop-filter: blur(6px);
+      z-index: 9999;
+    }
+
+    .modal-content.modal-wide {
+      width: min(92vw, 520px);
+    }
+
+    .modal-content {
+      position: relative;
+      max-height: min(82vh, 720px);
+      overflow-y: auto;
+      z-index: 10000;
+    }
+
+    .modal-content::-webkit-scrollbar,
+    #listaCategorias::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb,
+    #listaCategorias::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.35);
+      border-radius: 999px;
+    }
+
+    .modal-content.categorias-modal-content {
+      padding-right: 14px;
+    }
+
+    #listaCategorias {
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 6px;
+      margin: 10px 0;
+    }
+
+    .perfil-form-grid,
+    .config-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .switch-item,
+    .config-option,
+    .security-note,
+    .notification-summary {
+      background: var(--bg-card-soft);
+      border-radius: 14px;
+      padding: 12px 14px;
+      color: var(--text-soft);
+    }
+
+    .switch-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .switch-copy strong,
+    .config-option strong {
+      display: block;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .switch-copy span,
+    .config-option span,
+    .security-note,
+    .notification-summary {
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--text-muted);
+    }
+
+    .switch-control {
+      appearance: none;
+      width: 46px;
+      height: 26px;
+      border-radius: 999px;
+      background: var(--bg-card-hover);
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: 0.2s;
+    }
+
+    .switch-control::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--text-primary);
+      transition: 0.2s;
+    }
+
+    .switch-control:checked {
+      background: var(--accent);
+    }
+
+    .switch-control:checked::after {
+      transform: translateX(20px);
+    }
+
+    .config-actions,
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .config-actions button,
+    .modal-actions button {
+      margin-top: 0;
+    }
+
+    .secondary-btn {
+      background: var(--bg-card-hover);
+      color: var(--text-main);
+      border: 1px solid var(--border-soft);
+    }
+
+    body.light-mode .secondary-btn,
+    body.theme-light .secondary-btn {
+      background: var(--bg-card-soft);
+      color: var(--text-main);
+    }
+
+    body.light-mode .secondary-btn:hover,
+    body.theme-light .secondary-btn:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .modal-textarea {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      background: var(--bg-card-soft);
+      color: var(--text-main);
+      box-sizing: border-box;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .helper-text {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin: 0;
+    }
+
+    .success-banner {
+      display: none;
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(34, 197, 94, 0.28);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .renta-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .screen-header,
+      .report-toolbar-top {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .report-shell {
+        padding: 16px;
+        border-radius: 24px;
+      }
+
+      .report-card-hero,
+      .report-card-balance,
+      .report-card-donut,
+      .report-card-top,
+      .report-card-chart,
+      .report-card-list,
+      .report-card-wide {
+        grid-column: span 12;
+      }
+
+      .summary-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .summary-mini {
+        padding: 12px;
+      }
+
+      .summary-mini strong {
+        font-size: 15px;
+      }
+
+      .pantalla {
+        padding: 18px 12px 118px;
+      }
+
+      .menu.menu-pro {
+        gap: 4px;
+        padding: 8px 8px;
+      }
+
+      .menu.menu-pro .menu-item {
+        width: 56px;
+        font-size: 9px;
+      }
+
+      .loader-tip-wrap {
+        max-width: 300px;
+      }
+
+      .filtro-rango {
+        grid-template-columns: 1fr;
+      }
+
+      .onboarding-card {
+        width: calc(100vw - 20px);
+      }
+    }
+
+    @media (max-width: 620px) {
+      .summary-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loader">
+    <div class="brand-title brand-title-login" style="margin-bottom:18px;">
+      <img class="section-logo" src="assets/logo-mark-dw.svg" alt="Dinamicash Wallet">
+      <div class="brand-copy">
+        <h1 style="margin:0 0 8px;">Dinamicash Wallet</h1>
+        <p class="brand-subtitle" style="margin:0;">Controla tus gastos, toma el control</p>
+      </div>
+    </div>
+    <div id="walleLoaderDock" class="walle-loader-dock"></div>
+    <div class="spinner"></div>
+    <p id="loaderText">Cargando...</p>
+    <div class="loader-tip-wrap">
+      <div class="loader-tip-label" id="loaderLabel">Consejo financiero</div>
+      <div id="loaderTip" class="loader-tip">Organiza tu dinero antes de gastarlo.</div>
+    </div>
+  </div>
+
+  <div class="pantalla activa" id="inicio">
+    <div class="brand-title brand-title-home">
+      <img class="section-logo" src="assets/logo-mark-dw.svg" alt="Dinamicash Wallet">
+      <div class="brand-copy">
+        <h1 id="appName">Dinamicash Wallet</h1>
+        <p class="brand-subtitle">Controla tus gastos, toma el control</p>
+      </div>
+    </div>
+    <h2 id="balance">$0</h2>
+
+    <div class="filtro-rango">
+      <input id="fechaInicio" type="date" onchange="cargar()">
+      <input id="fechaFin" type="date" onchange="cargar()">
+      <select id="filtroTipo" onchange="cargar()">
+        <option value="todos" id="optFiltroTodos">Todos</option>
+        <option value="ingreso" id="optFiltroIngresos">Ingresos</option>
+        <option value="gasto" id="optFiltroGastos">Gastos</option>
+      </select>
+      <div class="filtro-acciones">
+        <button id="btnUltimos30Inicio" onclick="aplicarUltimos30Dias()">Últimos 30 días</button>
+      </div>
+    </div>
+
+    <button id="btnNuevoMovimiento" onclick="abrirModal()">Nuevo movimiento</button>
+
+    <ul id="lista"></ul>
+  </div>
+
+  <div class="pantalla" id="reportes">
+    <div class="screen-header">
+      <div class="screen-header-copy section-title">
+        <img class="section-logo section-logo-sm" src="assets/logo-mark-dw.svg" alt="Dinamicash Wallet">
+        <div class="section-title-copy">
+        <h2 id="tituloReportes">Reportes</h2>
+        <p>Explora tus ingresos, gastos y tendencias con una vista más clara, enfocada en decisiones rápidas y seguimiento real.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-shell">
+      <div class="report-toolbar">
+        <div class="report-toolbar-top">
+          <div class="report-kicker">Centro de análisis</div>
+          <div class="report-actions-inline">
+            <button class="btn-accent" id="btnUltimos30Reportes" onclick="aplicarUltimos30DiasReportes()">Últimos 30 días</button>
+            <button class="btn-ghost" onclick="exportarReportePDF()">PDF</button>
+            <button class="btn-ghost" onclick="exportarReporteExcel()">Excel</button>
+          </div>
+        </div>
+
+        <div class="filtro-rango">
+          <input id="fechaInicioReportes" type="date" onchange="cargarReportes()">
+          <input id="fechaFinReportes" type="date" onchange="cargarReportes()">
+          <select id="filtroMesReportes" onchange="sincronizarFiltrosReportesMes(); cargarReportes();">
+            <option value="">Mes</option>
+            <option value="1">Enero</option>
+            <option value="2">Febrero</option>
+            <option value="3">Marzo</option>
+            <option value="4">Abril</option>
+            <option value="5">Mayo</option>
+            <option value="6">Junio</option>
+            <option value="7">Julio</option>
+            <option value="8">Agosto</option>
+            <option value="9">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+          <input id="filtroAnioReportes" type="number" min="2020" max="2100" placeholder="Año" onchange="sincronizarFiltrosReportesMes(); cargarReportes()">
+          <select id="filtroTipoReportes" onchange="cargarReportes()">
+            <option value="todos" id="optFiltroReportesTodos">Todos</option>
+            <option value="ingreso" id="optFiltroReportesIngresos">Ingresos</option>
+            <option value="gasto" id="optFiltroReportesGastos">Gastos</option>
+          </select>
+          <select id="filtroCategoriaReportes" onchange="cargarReportes()">
+            <option value="">Todas las categorías</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="report-grid-primary">
+        <div class="report-card report-card-hero">
+          <div class="report-card-title">
+            <h3>Radar financiero</h3>
+            <span class="report-badge">Resumen</span>
+          </div>
+          <div class="metric-stack">
+            <div class="metric-tile">
+              <p class="metric-label">Promedio mensual</p>
+              <p class="metric-value metric-value-positive" id="repPromedioMensual">$0</p>
+              <div class="metric-caption">Tu ritmo general de gasto en el periodo actual.</div>
+            </div>
+            <div class="metric-tile">
+              <p class="metric-label">Capacidad de ahorro</p>
+              <p class="metric-value metric-value-negative" id="repCapacidadAhorro">0%</p>
+              <div class="metric-caption">Qué parte de tus ingresos logra quedarse contigo.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="report-card report-card-hero">
+          <div class="report-card-title">
+            <h3>Foco del periodo</h3>
+            <span class="report-badge">Insight</span>
+          </div>
+          <div class="metric-stack">
+            <div class="metric-tile">
+              <p class="metric-label">Categoría con mayor gasto</p>
+              <p class="metric-value metric-value-positive" id="repCategoriaMayor">Sin datos</p>
+            </div>
+            <div class="metric-tile">
+              <p class="metric-label">Total de movimientos</p>
+              <p class="metric-value metric-value-negative" id="repTotalMovimientos">0</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="report-card report-card-chart">
+          <div class="report-card-title">
+            <h3>Mes actual vs anterior</h3>
+            <span class="report-badge">Comparativa</span>
+          </div>
+          <div class="chart-frame">
+            <canvas id="graficaComparativa"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="report-grid-secondary">
+        <div class="report-card report-card-balance">
+          <div class="report-card-title">
+            <h3>Balance principal</h3>
+            <span class="report-badge">Estado</span>
+          </div>
+          <div class="summary-row">
+            <div class="summary-mini">
+              <span id="reportesIngresosLabel">Ingresos</span>
+              <strong class="metric-value-positive" id="repIngresos">$0</strong>
+            </div>
+            <div class="summary-mini">
+              <span id="reportesGastosLabel">Gastos</span>
+              <strong class="metric-value-negative" id="repGastos">$0</strong>
+            </div>
+            <div class="summary-mini">
+              <span id="reportesBalanceLabel">Balance</span>
+              <strong id="repBalance">$0</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="report-card report-card-donut">
+          <div class="report-card-title">
+            <h3 id="tituloGastosCategoria">Gastos por categoría</h3>
+            <span class="report-badge">Distribución</span>
+          </div>
+          <div class="chart-frame">
+            <canvas id="grafica"></canvas>
+          </div>
+        </div>
+
+        <div class="report-card report-card-top">
+          <div class="report-card-title">
+            <h3 id="tituloTopCategorias">Categorías que más gastan</h3>
+            <span class="report-badge">Top</span>
+          </div>
+          <div id="listaReporte" class="top-categorias-lista"></div>
+        </div>
+
+        <div class="report-card report-card-wide">
+          <div class="report-card-title">
+            <h3>Resumen mensual</h3>
+            <span class="report-badge">Histórico</span>
+          </div>
+          <div id="listaResumenMensual" class="top-categorias-lista"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pantalla" id="metas">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+      <div class="section-title">
+        <img class="section-logo section-logo-sm" src="assets/logo-mark-dw.svg" alt="Dinamicash Wallet">
+        <div class="section-title-copy">
+          <h2 id="tituloMetas">Metas de Ahorro</h2>
+          <p>Haz seguimiento a lo que planeas ahorrar y lo que realmente ya apartaste.</p>
+        </div>
+      </div>
+      <button id="btnNuevaMeta" onclick="abrirModalMeta()" class="btn-mas">+</button>
+    </div>
+
+    <div class="card">
+      <p id="progresoTotalLabel">Progreso Total</p>
+      <h2 id="totalMetas">$0</h2>
+    </div>
+
+    <div id="listaMetas"></div>
+  </div>
+
+  <div class="pantalla" id="renta">
+    <div class="section-title" style="margin-bottom:12px;">
+      <img class="section-logo section-logo-sm" src="assets/logo-mark-dw.svg" alt="Dinamicash Wallet">
+      <div class="section-title-copy">
+        <h2 id="tituloRenta">Declarar Renta</h2>
+      </div>
+    </div>
+
+    <div class="alerta-renta" id="rentaAlertText">
+      Esta simulación es solo una proyección orientativa enfocada en Colombia. No reemplaza la revisión de un contador de confianza ni una declaración oficial ante la DIAN.
+    </div>
+
+    <div class="renta-layout">
+      <div>
+        <div class="renta-card">
+          <h3 id="rentaCardTitle">Simulador simple</h3>
+          <p class="renta-nota" id="rentaCardNote">Ingresa los datos de forma aproximada. Si no tienes un valor exacto, usa el más cercano que conozcas.</p>
+
+          <div class="renta-grid">
+            <div class="campo-renta">
+              <div class="campo-label">
+                <span id="rentaIngresosLabel">Ingresos anuales</span>
+                <button type="button" class="campo-ayuda-btn" onclick="toggleAyudaCampo('ayudaIngresos')">!</button>
+              </div>
+              <div id="ayudaIngresos" class="campo-ayuda">Pon aquí todo lo que recibiste en el año: salario, honorarios, comisiones, arriendos u otros ingresos. Si no sabes el exacto, usa el total aproximado del año.</div>
+              <input id="rentaIngresos" class="entrada-moneda" type="text" inputmode="numeric" placeholder="Ej: 72.000.000">
+            </div>
+
+            <div class="campo-renta">
+              <div class="campo-label">
+                <span id="rentaPatrimonioLabel">Patrimonio bruto</span>
+                <button type="button" class="campo-ayuda-btn" onclick="toggleAyudaCampo('ayudaPatrimonio')">!</button>
+              </div>
+              <div id="ayudaPatrimonio" class="campo-ayuda">Es el valor total de lo que tienes a tu nombre al cierre del año: dinero en cuentas, vivienda, carro, inversiones y otros bienes. Aquí no restes deudas.</div>
+              <input id="rentaPatrimonio" class="entrada-moneda" type="text" inputmode="numeric" placeholder="Ej: 250.000.000">
+            </div>
+
+            <div class="campo-renta">
+              <div class="campo-label">
+                <span id="rentaDeduccionesLabel">Deducciones estimadas</span>
+                <button type="button" class="campo-ayuda-btn" onclick="toggleAyudaCampo('ayudaDeducciones')">!</button>
+              </div>
+              <div id="ayudaDeducciones" class="campo-ayuda">Pon los valores que normalmente te ayudan a bajar la base del impuesto, como salud prepagada, dependientes, intereses de vivienda o aportes permitidos. Si no sabes, puedes dejarlo en 0.</div>
+              <input id="rentaDeducciones" class="entrada-moneda" type="text" inputmode="numeric" placeholder="Ej: 8.000.000">
+            </div>
+
+            <div class="campo-renta">
+              <div class="campo-label">
+                <span id="rentaRetencionesLabel">Retenciones ya practicadas</span>
+                <button type="button" class="campo-ayuda-btn" onclick="toggleAyudaCampo('ayudaRetenciones')">!</button>
+              </div>
+              <div id="ayudaRetenciones" class="campo-ayuda">Es lo que ya te descontaron durante el año por concepto de retención en la fuente. Si tienes certificado laboral o soportes, normalmente aparece ahí.</div>
+              <input id="rentaRetenciones" class="entrada-moneda" type="text" inputmode="numeric" placeholder="Ej: 3.500.000">
+            </div>
+          </div>
+
+          <button id="btnSimularRenta" onclick="simularRenta()">Simular declaración</button>
+        </div>
+
+        <div id="resultadoRenta" class="renta-resultado" style="display:none;margin-top:16px;">
+          <h3 id="resultadoRentaTitulo">Resultado estimado</h3>
+          <p id="rentaMensaje"></p>
+          <div id="rentaEstadoChip" class="renta-chip info">Simulación orientativa</div>
+
+          <div class="renta-resumen">
+            <div class="resumen-item">
+              <div class="resumen-label" id="rentaBaseLabel">Base estimada</div>
+              <div class="resumen-valor" id="rentaBase">$0</div>
+            </div>
+            <div class="resumen-item">
+              <div class="resumen-label" id="rentaImpuestoLabel">Impuesto estimado</div>
+              <div class="resumen-valor" id="rentaImpuesto">$0</div>
+            </div>
+            <div class="resumen-item">
+              <div class="resumen-label" id="rentaSaldoLabel">Saldo estimado</div>
+              <div class="resumen-valor" id="rentaSaldo">$0</div>
+            </div>
+          </div>
+          <div class="renta-actions">
+            <button type="button" id="btnDescargarRenta" onclick="descargarRentaPDF()" style="display:none;">Descargar PDF</button>
+          </div>
+
+          <div class="renta-breakdown" id="rentaBreakdown"></div>
+        </div>
+      </div>
+
+      <div class="renta-info-card">
+        <h3 id="rentaGuiaTitulo">Guía rápida Colombia</h3>
+        <p class="renta-nota" id="rentaGuiaNota">Referencia útil para personas naturales en Colombia:</p>
+        <ul>
+          <li>Si tus ingresos brutos del año llegan a $65.891.000 o más, ya conviene revisar si debes declarar.</li>
+          <li>Si tu patrimonio bruto al cierre del año llega a $211.793.000 o más, también debes validarlo con más cuidado.</li>
+          <li>Las retenciones pueden disminuir lo que finalmente tendrías que pagar.</li>
+          <li>Esta herramienta te ayuda a orientarte, no reemplaza la revisión profesional.</li>
+        </ul>
+        <p class="renta-nota" id="rentaGuiaRef" style="margin-top:14px;">Referencia oficial DIAN: para la declaración presentada en 2025 sobre el año gravable 2024, 1.400 UVT equivalieron a $65.891.000 en ingresos y 4.500 UVT a $211.793.000 en patrimonio bruto.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="pantalla" id="perfil">
+    <div class="section-title" style="margin-bottom:14px;">
+      <img class="section-logo section-logo-sm" src="assets/logo-mark-dw.svg" alt="Dinamicash Wallet">
+      <div class="section-title-copy">
+        <h2 id="tituloPerfil">Perfil</h2>
+      </div>
+    </div>
+    <div class="perfil-panel">
+      <div class="perfil-resumen-card">
+        <div class="perfil-avatar" id="perfilAvatar">U</div>
+        <div class="perfil-datos">
+          <h3 class="perfil-nombre" id="perfilNombre">Usuario</h3>
+          <p class="perfil-correo" id="perfilCorreo">correo@ejemplo.com</p>
+        </div>
+      </div>
+
+      <div class="perfil-stats">
+        <div class="perfil-stat">
+          <div class="perfil-stat-valor" id="perfilTransacciones">0</div>
+          <div class="perfil-stat-label" id="perfilTransaccionesLabel">Transacciones</div>
+        </div>
+        <div class="perfil-stat">
+          <div class="perfil-stat-valor" id="perfilMetas">0</div>
+          <div class="perfil-stat-label" id="perfilMetasLabel">Metas</div>
+        </div>
+        <div class="perfil-stat">
+          <div class="perfil-stat-valor" id="perfilDiasActivos">0</div>
+          <div class="perfil-stat-label" id="perfilDiasLabel">Días activo</div>
+        </div>
+      </div>
+
+      <div class="perfil-menu">
+        <button type="button" class="perfil-menu-item" onclick="editarPerfil()">
+          <span class="perfil-menu-info">
+            <span class="perfil-menu-icono">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path><path d="M5 20a7 7 0 0 1 14 0"></path></svg>
+            </span>
+            <span class="perfil-menu-texto">
+              <strong id="perfilEditarTitulo">Editar perfil</strong>
+              <span id="perfilEditarTexto">Consulta y actualiza tus datos básicos</span>
+            </span>
+          </span>
+          <span class="perfil-menu-flecha">›</span>
+        </button>
+
+        <button type="button" class="perfil-menu-item" onclick="verNotificaciones()">
+          <span class="perfil-menu-info">
+            <span class="perfil-menu-icono">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"></path><path d="M10 17a2 2 0 0 0 4 0"></path></svg>
+            </span>
+            <span class="perfil-menu-texto">
+              <strong id="perfilNotificacionesTitulo">Notificaciones</strong>
+              <span id="perfilNotificacionesTexto">Revisa avisos y recordatorios de tu cuenta</span>
+            </span>
+          </span>
+          <span class="perfil-menu-flecha">›</span>
+        </button>
+
+        <button type="button" class="perfil-menu-item" onclick="verSeguridad()">
+          <span class="perfil-menu-info">
+            <span class="perfil-menu-icono">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10V7a5 5 0 0 1 10 0v3"></path><rect x="5" y="10" width="14" height="10" rx="2"></rect></svg>
+            </span>
+            <span class="perfil-menu-texto">
+              <strong id="perfilSeguridadTitulo">Seguridad</strong>
+              <span id="perfilSeguridadTexto">Administra acceso y protección de tu sesión</span>
+            </span>
+          </span>
+          <span class="perfil-menu-flecha">›</span>
+        </button>
+
+        <button type="button" class="perfil-menu-item" onclick="abrirConfiguracion()">
+          <span class="perfil-menu-info">
+            <span class="perfil-menu-icono">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-.4-1.1 1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H2.8a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.1-.4 1.7 1.7 0 0 0 .6-1A1.7 1.7 0 0 0 4.26 6.3l-.06-.06A2 2 0 1 1 7.03 3.4l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V2.8a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 .4 1.1 1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.87-.34l.06-.06A2 2 0 1 1 20.56 6l-.06.06A1.7 1.7 0 0 0 19.4 9c0 .38.14.74.4 1 .28.28.66.43 1.06.4H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.1.4 1.7 1.7 0 0 0-.4 1Z"></path></svg>
+            </span>
+            <span class="perfil-menu-texto">
+              <strong id="perfilConfigTitulo">Configuración</strong>
+              <span id="perfilConfigTexto">Personaliza apariencia, idioma y preferencias</span>
+            </span>
+          </span>
+          <span class="perfil-menu-flecha">›</span>
+        </button>
+
+        <button type="button" class="perfil-menu-item" onclick="ayuda()">
+          <span class="perfil-menu-info">
+            <span class="perfil-menu-icono">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle><path d="M9.1 9a3 3 0 1 1 5.8 1c0 2-3 2-3 4"></path><path d="M12 17h.01"></path></svg>
+            </span>
+            <span class="perfil-menu-texto">
+              <strong id="perfilAyudaTitulo">Ayuda y soporte</strong>
+              <span id="perfilAyudaTexto">Envía una solicitud si necesitas acompañamiento</span>
+            </span>
+          </span>
+          <span class="perfil-menu-flecha">›</span>
+        </button>
+      </div>
+
+      <div class="perfil-extra-card">
+        <h3 id="perfilCategoriasTitulo">Categorías personalizadas</h3>
+        <p class="mini-note" id="perfilCategoriasTexto">Las categorías principales ya vienen listas. Si necesitas una especial, puedes crearla aquí con su símbolo.</p>
+        <button id="perfilCategoriasBtn" onclick="abrirCategorias()">Gestionar categorías</button>
+      </div>
+
+      <button class="perfil-logout" id="perfilLogoutBtn" onclick="logout()">Cerrar sesión</button>
+      <p class="perfil-version">Dinamicash Wallet v1.5.0</p>
+    </div>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h3 id="modalMovimientoTitulo">Movimiento</h3>
+
+      <select id="tipo">
+        <option value="ingreso" id="tipoIngreso">Ingreso</option>
+        <option value="gasto" id="tipoGasto">Gasto</option>
+      </select>
+
+      <select id="categoria" onchange="actualizarTipoSegunCategoria()"></select>
+      <small id="hintMetaMovimiento" class="mini-note" style="display:none;">Los aportes a metas se registran como gasto para reflejar que salen de tu dinero disponible.</small>
+
+      <input id="fechaMovimiento" type="date">
+      <input id="monto" class="entrada-moneda" type="text" inputmode="numeric" placeholder="Monto">
+      <input id="descripcion" placeholder="Descripción (opcional)">
+
+      <div class="categoria-actions">
+        <button id="btnGuardarMovimiento" onclick="guardar()">Guardar</button>
+        <button id="btnNuevaCategoriaMovimiento" onclick="abrirCategoriasDesdeMovimiento()">Nueva categoría</button>
+      </div>
+      <button id="btnCancelarMovimiento" onclick="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modalCategorias">
+    <div class="modal-content categorias-modal-content">
+      <h3 id="modalCategoriasTitulo">Categorías personalizadas</h3>
+
+      <input id="nuevaCategoria" placeholder="Nueva categoría">
+      <select id="iconoCategoria"></select>
+      <button id="btnCrearCategoria" onclick="crearCategoria()">Crear</button>
+
+      <ul id="listaCategorias"></ul>
+
+      <button id="btnCerrarCategorias" onclick="cerrarCategorias()">Cerrar</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modalMeta">
+    <div class="modal-content">
+      <h3 id="tituloModalMeta">Nueva Meta</h3>
+
+      <input id="metaNombre" placeholder="Nombre de la meta">
+      <input id="metaMonto" class="entrada-moneda" type="text" inputmode="numeric" placeholder="Monto">
+      <input type="date" id="metaFecha">
+
+      <button id="btnGuardarMeta" onclick="guardarMeta()">Guardar</button>
+      <button onclick="cerrarModalMeta()">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modalEditarPerfil">
+    <div class="modal-content modal-wide">
+      <h3 id="modalEditarPerfilTitulo">Editar perfil</h3>
+      <div class="perfil-form-grid">
+        <input id="editarNombre" placeholder="Nombre completo">
+        <input id="editarCorreo" type="email" placeholder="Correo electrónico">
+        <p class="helper-text" id="textoEditarPerfil">Actualiza tus datos básicos como en otras apps: nombre visible y correo de acceso.</p>
+      </div>
+      <div class="success-banner" id="perfilBanner"></div>
+      <div class="modal-actions">
+        <button id="btnGuardarPerfil" onclick="guardarPerfil()">Guardar cambios</button>
+        <button class="secondary-btn" id="btnCancelarPerfil" onclick="cerrarModalGenerico('modalEditarPerfil')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalNotificaciones">
+    <div class="modal-content modal-wide">
+      <h3 id="modalNotificacionesTitulo">Notificaciones</h3>
+      <div class="config-grid">
+        <div class="switch-item">
+          <div class="switch-copy">
+            <strong id="notifRecordatoriosTitulo">Recordatorios de metas</strong>
+            <span id="notifRecordatoriosTexto">Avisos para no perder de vista tus objetivos.</span>
+          </div>
+          <input id="notifMetas" class="switch-control" type="checkbox">
+        </div>
+        <div class="switch-item">
+          <div class="switch-copy">
+            <strong id="notifResumenTitulo">Resumen semanal</strong>
+            <span id="notifResumenTexto">Una vista rápida de ingresos, gastos y balance.</span>
+          </div>
+          <input id="notifResumen" class="switch-control" type="checkbox">
+        </div>
+        <div class="switch-item">
+          <div class="switch-copy">
+            <strong id="notifSeguridadTitulo">Alertas de seguridad</strong>
+            <span id="notifSeguridadTexto">Mensajes cuando haya cambios sensibles en la cuenta.</span>
+          </div>
+          <input id="notifSeguridad" class="switch-control" type="checkbox">
+        </div>
+      </div>
+      <div class="notification-summary" id="notificacionesResumen"></div>
+      <div class="modal-actions">
+        <button id="btnGuardarNotificaciones" onclick="guardarNotificaciones()">Guardar preferencias</button>
+        <button class="secondary-btn" id="btnCerrarNotificaciones" onclick="cerrarModalGenerico('modalNotificaciones')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalSeguridad">
+    <div class="modal-content modal-wide">
+      <h3 id="modalSeguridadTitulo">Seguridad</h3>
+      <div class="perfil-form-grid">
+        <input id="passwordActual" type="password" inputmode="numeric" maxlength="4" placeholder="PIN actual">
+        <input id="passwordNueva" type="password" inputmode="numeric" maxlength="4" placeholder="Nuevo PIN">
+        <input id="passwordConfirmacion" type="password" inputmode="numeric" maxlength="4" placeholder="Confirmar nuevo PIN">
+        <div class="security-note" id="seguridadTexto">Usa un PIN numerico de 4 digitos y evita repetir el anterior.</div>
+      </div>
+      <div class="success-banner" id="seguridadBanner"></div>
+      <div class="modal-actions">
+        <button id="btnGuardarSeguridad" onclick="guardarSeguridad()">Actualizar PIN</button>
+        <button class="secondary-btn" id="btnCancelarSeguridad" onclick="cerrarModalGenerico('modalSeguridad')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalConfiguracion">
+    <div class="modal-content modal-wide">
+      <h3 id="modalConfiguracionTitulo">Configuración</h3>
+      <div class="config-grid">
+        <div class="config-option">
+          <strong id="configTemaTitulo">Apariencia</strong>
+          <span id="configTemaTexto">Elige entre modo oscuro o claro.</span>
+          <select id="configTema">
+            <option value="dark" id="optTemaOscuro">Oscuro</option>
+            <option value="light" id="optTemaClaro">Claro</option>
+          </select>
+        </div>
+        <div class="config-option">
+          <strong id="configIdiomaTitulo">Idioma</strong>
+          <span id="configIdiomaTexto">Selecciona cómo quieres ver la interfaz.</span>
+          <select id="configIdioma">
+            <option value="es">Español</option>
+            <option value="en">English</option>
+            <option value="pt">Português</option>
+          </select>
+        </div>
+      </div>
+      <div class="success-banner" id="configBanner"></div>
+      <div class="modal-actions">
+        <button id="btnGuardarConfiguracion" onclick="guardarConfiguracion()">Guardar configuración</button>
+        <button class="secondary-btn" id="btnCancelarConfiguracion" onclick="cerrarModalGenerico('modalConfiguracion')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalAyuda">
+    <div class="modal-content modal-wide">
+      <h3 id="modalAyudaTitulo">Ayuda y soporte</h3>
+      <div class="perfil-form-grid">
+        <select id="ayudaAsunto">
+          <option value="general" id="ayudaOptGeneral">Consulta general</option>
+          <option value="movimientos" id="ayudaOptMovimientos">Problema con movimientos</option>
+          <option value="metas" id="ayudaOptMetas">Problema con metas</option>
+          <option value="cuenta" id="ayudaOptCuenta">Cuenta y acceso</option>
+        </select>
+        <input id="ayudaCorreo" type="email" placeholder="Correo de contacto">
+        <textarea id="ayudaMensaje" class="modal-textarea" rows="4" placeholder="Cuéntanos qué necesitas"></textarea>
+      </div>
+      <div class="success-banner" id="ayudaBanner"></div>
+      <div class="modal-actions">
+        <button id="btnEnviarAyuda" onclick="enviarAyuda()">Enviar solicitud</button>
+        <button class="secondary-btn" id="btnCancelarAyuda" onclick="cerrarModalGenerico('modalAyuda')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="menu menu-pro">
+    <button type="button" class="menu-item activo" data-target="inicio" onclick="mostrar('inicio')">
+      <svg class="menu-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5.5 9.5V20h13V9.5"></path><path d="M9.5 20v-5h5v5"></path></svg>
+      <span class="menu-texto" id="navInicio">Inicio</span>
+    </button>
+    <button type="button" class="menu-item" data-target="reportes" onclick="mostrar('reportes')">
+      <svg class="menu-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"></path><path d="M7 16V9"></path><path d="M12 16V5"></path><path d="M17 16v-3"></path></svg>
+      <span class="menu-texto" id="navReportes">Reportes</span>
+    </button>
+    <button type="button" class="menu-item" data-target="metas" onclick="mostrar('metas')">
+      <svg class="menu-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+      <span class="menu-texto" id="navMetas">Metas</span>
+    </button>
+    <button type="button" class="menu-item" data-target="renta" onclick="mostrar('renta')">
+      <svg class="menu-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l4 4v14H7z"></path><path d="M15 3v5h5"></path><path d="M10 12h6"></path><path d="M10 16h6"></path></svg>
+      <span class="menu-texto" id="navRenta">Renta</span>
+    </button>
+    <button type="button" class="menu-item" data-target="perfil" onclick="mostrar('perfil')">
+      <svg class="menu-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path><path d="M5 20a7 7 0 0 1 14 0"></path></svg>
+      <span class="menu-texto" id="navPerfil">Perfil</span>
+    </button>
+  </div>
+
+  <div class="fab-stack" id="fabStack">
+    <div class="fab-menu" id="fabMenu">
+      <button type="button" class="fab-option" onclick="abrirChatWalle(); cerrarFabMenu();" aria-label="Pregúntale a Walle">
+        <span class="fab-option-icon">🐾</span><span class="fab-option-label" id="fabWalleText">Pregúntale a Walle</span>
+      </button>
+      <button type="button" class="fab-option" onclick="abrirConfiguracion(); cerrarFabMenu();" aria-label="Configuración">
+        <span class="fab-option-icon">⚙</span><span class="fab-option-label">Configuración</span>
+      </button>
+      <button type="button" class="fab-option" onclick="iniciarGuiaUsuario(true); cerrarFabMenu();" aria-label="Ver recorrido">
+        <span class="fab-option-icon">!</span><span class="fab-option-label">Recorrido</span>
+      </button>
+      <button type="button" class="fab-option" onclick="ayuda(); cerrarFabMenu();" aria-label="Ayuda y soporte">
+        <span class="fab-option-icon">?</span><span class="fab-option-label">Ayuda</span>
+      </button>
+    </div>
+    <button type="button" id="fabMain" class="fab-main" onclick="toggleFabMenu()" aria-label="Abrir accesos rápidos" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M12 5v14"></path>
+        <path d="M5 12h14"></path>
+      </svg>
+    </button>
+  </div>
+
+  <div id="onboardingLayer" class="onboarding-layer" hidden>
+    <div class="onboarding-backdrop"></div>
+    <div id="onboardingHighlight" class="onboarding-highlight" hidden></div>
+    <div id="onboardingCard" class="onboarding-card" data-placement="center" style="--arrow-left:50%;">
+      <div id="walleOnboardingDock" class="walle-onboarding-dock"></div>
+      <div class="onboarding-kicker" id="onboardingKicker">Guía inicial</div>
+      <h3 class="onboarding-title" id="onboardingTitle">Bienvenido</h3>
+      <p class="onboarding-body" id="onboardingBody"></p>
+      <div class="onboarding-progress" id="onboardingProgress"></div>
+      <div class="onboarding-actions">
+        <button type="button" id="onboardingPrev" class="onboarding-secondary">Atrás</button>
+        <button type="button" id="onboardingNext">Siguiente</button>
+        <button type="button" id="onboardingSkip" class="onboarding-secondary">Omitir</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalWalleChat">
+    <div class="modal-content modal-wide walle-chat-modal">
+      <div class="walle-chat-header">
+        <div class="walle-chat-brand">
+          <img src="assets/walle-happy.svg" alt="Walle" class="walle-chat-avatar">
+          <div>
+            <h3 id="walleChatTitle">Pregúntale a Walle</h3>
+            <p id="walleChatSubtitle">Respuestas rápidas para tus finanzas en Colombia</p>
+          </div>
+        </div>
+        <button type="button" class="walle-chat-close" onclick="cerrarModalGenerico('modalWalleChat')">×</button>
+      </div>
+
+      <div id="walleChatMessages" class="walle-chat-messages"></div>
+
+      <form class="walle-chat-form" onsubmit="enviarPreguntaWalle(event)">
+        <input id="walleQuestionInput" type="text" placeholder="Escribe tu pregunta..." autocomplete="off">
+        <button id="walleSendBtn" type="submit">Enviar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="walleOverlay" class="walle-overlay" hidden></div>
+  <div id="appToast" class="app-toast" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="api.js"></script>
+  <script src="walle-widget.js"></script>
+  <script src="walle-controller.js"></script>
+  <script src="walle-engine.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

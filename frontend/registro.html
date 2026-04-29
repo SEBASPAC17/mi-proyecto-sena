@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro - Dinamicash Wallet</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <div class="login-container">
+    <div class="brand-title brand-title-login">
+      <img class="section-logo" src="assets/logo-mark-dw.svg" alt="Dinamicash Wallet">
+      <div class="brand-copy">
+        <h1>Registro</h1>
+        <p class="brand-subtitle">Crea tu cuenta y toma el control</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <form id="registroForm">
+        <input id="nombre" placeholder="Nombre" required>
+        <input id="correo" type="email" placeholder="Correo" required>
+        <input id="password" type="password" inputmode="numeric" maxlength="4" pattern="\d{4}" placeholder="PIN de 4 digitos" required>
+        <button type="submit">Registrarse</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script src="api.js"></script>
+  <script>
+    const API_URL = window.DinamicashApi?.getBaseUrl?.() || "http://localhost:3000";
+    const i18n = window.DinamicashI18n;
+
+    if (i18n) {
+      document.documentElement.lang = i18n.getPreferredLanguage();
+      document.title = i18n.t("registerPageTitle");
+      document.querySelector("h1").textContent = i18n.t("registerHeading");
+      document.getElementById("nombre").placeholder = i18n.t("name");
+      document.getElementById("correo").placeholder = i18n.t("email");
+      document.getElementById("password").placeholder = i18n.t("password");
+      document.querySelector("#registroForm button").textContent = i18n.t("registerButton");
+    }
+
+    document.getElementById("registroForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const nombre = document.getElementById("nombre").value.trim();
+      const correo = document.getElementById("correo").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const passwordMinMessage = i18n?.t("registerPasswordMin") || "El PIN debe tener exactamente 4 digitos numericos";
+
+      if (!nombre || !correo || !password) {
+        alert(i18n?.t("registerRequired") || "Completa todos los campos");
+        return;
+      }
+
+      if (!/^\d{4}$/.test(password)) {
+        alert(passwordMinMessage);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/registro`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre, correo, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.mensaje || i18n?.t("registerError") || "No se pudo registrar");
+          return;
+        }
+
+        alert(i18n?.t("registerSuccess") || "Usuario creado correctamente");
+        window.location.href = "login.html";
+      } catch (error) {
+        console.error(error);
+        alert(i18n?.t("registerServerError") || "No se pudo conectar con el servidor");
+      }
+    });
+  </script>
+</body>
+</html>

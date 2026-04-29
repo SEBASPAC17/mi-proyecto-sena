@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Dinamicash Wallet</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body data-page-title="loginPageTitle">
+  <div class="login-container">
+    <div class="brand-title brand-title-login">
+      <img class="section-logo" src="assets/logo-mark-dw.svg" alt="Dinamicash Wallet">
+      <div class="brand-copy">
+        <h1 data-i18n="appName">Dinamicash Wallet</h1>
+        <p class="brand-subtitle">Controla tus gastos, toma el control</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="loginHeading">Iniciar sesión</h2>
+
+      <form id="loginForm">
+        <input type="email" id="correo" data-i18n-placeholder="email" placeholder="Correo" required>
+        <input type="password" id="password" inputmode="numeric" maxlength="4" pattern="\d{4}" data-i18n-placeholder="password" placeholder="PIN de 4 digitos" required>
+        <button type="submit" data-i18n="loginButton">Ingresar</button>
+      </form>
+
+      <div class="links">
+        <p onclick="irRegistro()" data-i18n="registerLink">Registrarse</p>
+        <p onclick="olvido()" data-i18n="forgotPassword">Olvidaste tu PIN?</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="position:fixed;left:14px;bottom:10px;color:#94a3b8;font-size:12px;opacity:.9;">
+    Hecho con amor por: Sebastian Andres Castañeda Panqueva
+  </div>
+  <div style="position:fixed;right:14px;bottom:10px;color:#94a3b8;font-size:12px;opacity:.9;">
+    v1.5.0
+  </div>
+
+  <script src="i18n.js"></script>
+  <script src="api.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>
+
+
