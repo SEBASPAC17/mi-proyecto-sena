@@ -1,72 +1,55 @@
 <svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="motivateBody" x1="55" y1="61" x2="166" y2="180" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#293652"/>
-      <stop offset="1" stop-color="#101827"/>
+    <linearGradient id="bodyMotivate" x1="48" y1="58" x2="184" y2="180" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#34D399"/>
+      <stop offset=".45" stop-color="#22C55E"/>
+      <stop offset="1" stop-color="#15803D"/>
     </linearGradient>
-    <linearGradient id="motivateFlap" x1="70" y1="34" x2="162" y2="74" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#80F270"/>
-      <stop offset="1" stop-color="#22C55E"/>
-    </linearGradient>
-    <linearGradient id="motivateTab" x1="162" y1="92" x2="201" y2="122" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#81FF71"/>
-      <stop offset="1" stop-color="#16A34A"/>
-    </linearGradient>
-    <radialGradient id="motivateGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(120 112) rotate(90) scale(98)">
-      <stop stop-color="#A78BFA" stop-opacity=".18"/>
-      <stop offset="1" stop-color="#A78BFA" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="motivateShadow" x="18" y="26" width="204" height="198" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-      <feOffset dy="14"/>
-      <feGaussianBlur stdDeviation="12"/>
-      <feColorMatrix type="matrix" values="0 0 0 0 0.0196078 0 0 0 0 0.0509804 0 0 0 0 0.133333 0 0 0 0.34 0"/>
-      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_1_1"/>
-      <feBlend in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape"/>
+    <filter id="shadowMotivate" x="12" y="22" width="216" height="204" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="15" stdDeviation="12" flood-color="#052E16" flood-opacity=".32"/>
     </filter>
+    <style>
+      .spark{animation:sparkMotivate 1.6s ease-in-out infinite}
+      .blink{transform-origin:center;animation:blinkMotivate 4s infinite}
+      @keyframes blinkMotivate{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}}
+      @keyframes sparkMotivate{0%,100%{opacity:.35;transform:scale(.9)}50%{opacity:1;transform:scale(1.1)}}
+    </style>
   </defs>
 
-  <circle cx="120" cy="112" r="92" fill="url(#motivateGlow)"/>
+  <circle cx="120" cy="118" r="94" fill="#A78BFA" opacity=".14"/>
+  <g filter="url(#shadowMotivate)">
+    <path d="M55 73C55 59.745 65.745 49 79 49H146C164.225 49 179 63.775 179 82V150C179 166.569 165.569 180 149 180H91L70.84 198.41C63.779 204.859 52.5 199.849 52.5 190.281V177.5C42.948 174.68 36 165.84 36 155.375V92C36 81.507 44.507 73 55 73Z" fill="url(#bodyMotivate)"/>
+    <path d="M75 44H148C169.539 44 187 61.461 187 83V88H69C59.611 88 52 80.389 52 71V67C52 54.297 62.297 44 75 44Z" fill="#DDD6FE"/>
+    <path d="M66 55H151C164.807 55 176 66.193 176 80V91H64C57.373 91 52 85.627 52 79V69C52 61.268 58.268 55 66 55Z" fill="#86EFAC"/>
+    <path d="M157 94H199C205.627 94 211 99.373 211 106V127C211 133.627 205.627 139 199 139H157V94Z" fill="#F5F3FF"/>
+    <rect x="162" y="100" width="38" height="33" rx="13" fill="#14532D"/>
+    <circle cx="188" cy="116" r="8" fill="#EDE9FE"/>
 
-  <path d="M66 40H140.5C173.361 40 200 66.6391 200 99.5C200 132.361 173.361 159 140.5 159H126.455C122.855 159 121.026 154.638 123.525 152.055L142.52 132.414C156.304 118.16 164.015 99.1066 164.015 79.2783C164.015 46.4174 137.376 19.7783 104.515 19.7783H66C59.3726 19.7783 54 25.1509 54 31.7783V28C54 21.3726 59.3726 16 66 16V40Z" fill="url(#motivateFlap)"/>
-  <path d="M54 71C54 58.8497 63.8497 49 76 49H147C160.807 49 172 60.1929 172 74V141C172 154.807 160.807 166 147 166H86.734L63.7191 189.982C56.7207 197.278 44.5 192.32 44.5 182.211V166H76C63.8497 166 54 156.15 54 144V71Z" fill="url(#motivateBody)"/>
-  <rect x="158" y="92" width="44" height="39" rx="14" fill="#F8FAFC"/>
-  <rect x="163" y="97" width="39" height="34" rx="12" fill="#263147"/>
-  <path d="M165 113H185.5" stroke="#F8FAFC" stroke-width="6" stroke-linecap="round"/>
-  <circle cx="171.5" cy="113" r="3.8" fill="#F8FAFC"/>
-  <circle cx="171.5" cy="113" r="6.8" stroke="#8A94A3" stroke-width="1.8"/>
-  <path d="M181 86.5H193.5C201.508 86.5 208 92.9919 208 101V122.5C208 130.508 201.508 137 193.5 137H181V86.5Z" fill="url(#motivateTab)"/>
-  <circle cx="193" cy="111.5" r="8.6" fill="#E8FFE8"/>
+    <ellipse class="blink" cx="91" cy="112" rx="23" ry="29" fill="#FFFFFF"/>
+    <ellipse class="blink" cx="130" cy="112" rx="23" ry="29" fill="#FFFFFF"/>
+    <ellipse cx="95" cy="117" rx="12" ry="17" fill="#062A18"/>
+    <ellipse cx="127" cy="117" rx="12" ry="17" fill="#062A18"/>
+    <circle cx="99" cy="109" r="4" fill="#FFFFFF"/>
+    <circle cx="131" cy="109" r="4" fill="#FFFFFF"/>
+    <path d="M75 82C82 77 90 76.5 99 80.5" stroke="#064E3B" stroke-width="6" stroke-linecap="round"/>
+    <path d="M118 80.5C127 76.5 135 77 142 82" stroke="#064E3B" stroke-width="6" stroke-linecap="round"/>
+    <path d="M82 145C91 159 103 166 118 166C133 166 145 159 154 145" stroke="#062A18" stroke-width="9" stroke-linecap="round"/>
+    <path d="M96 151C102.5 160 109.833 164.5 118 164.5C126.167 164.5 133.5 160 140 151" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+    <path d="M104 158C108.667 162.667 113.333 165 118 165C122.667 165 127.333 162.667 132 158C128.667 153.333 124 151 118 151C112 151 107.333 153.333 104 158Z" fill="#FB7185"/>
 
-  <path d="M59 48H92.2276C94.8288 48 96.068 51.1517 94.1716 52.9322L76.1767 69.8278C74.2907 71.5985 71.2143 70.2604 71.2143 67.6737V58.5C71.2143 52.701 66.5133 48 60.7143 48H59Z" fill="#7DF178"/>
-  <path d="M91 42H132.6C135.129 42 136.402 45.033 134.675 46.8794L113.866 69.1237C111.992 71.1272 108.643 69.8013 108.643 67.0572V55.5C108.643 48.0442 102.599 42 95.1429 42H91Z" fill="#9AF47C"/>
-  <path d="M126 39H163.958C166.443 39 167.735 41.9464 166.06 43.7806L149.711 61.6802C147.851 63.7162 144.5 62.3986 144.5 59.641V50.5C144.5 44.1487 139.351 39 133 39H126Z" fill="#BEF264"/>
-
-  <ellipse cx="90" cy="109" rx="23" ry="27.5" fill="#fff"/>
-  <ellipse cx="126.5" cy="109" rx="23" ry="27.5" fill="#fff"/>
-  <ellipse cx="93.5" cy="114" rx="13.5" ry="17" fill="#09111F"/>
-  <ellipse cx="124.5" cy="114" rx="13.5" ry="17" fill="#09111F"/>
-  <ellipse cx="96.5" cy="116" rx="7" ry="9" fill="#22C55E"/>
-  <ellipse cx="127.5" cy="116" rx="7" ry="9" fill="#22C55E"/>
-  <circle cx="100" cy="107.5" r="4" fill="#fff"/>
-  <circle cx="131" cy="107.5" r="4" fill="#fff"/>
-  <path d="M76 77.5C82.5 72.1667 89.6667 71.8333 97.5 76.5" stroke="#0B1220" stroke-width="6" stroke-linecap="round"/>
-  <path d="M118 76.5C125.833 71.8333 133 72.1667 139.5 77.5" stroke="#0B1220" stroke-width="6" stroke-linecap="round"/>
-  <path d="M86.5 145C94 156.333 105.167 162 118 162C130.833 162 142 156.333 149.5 145" stroke="#fff" stroke-width="4.8" stroke-linecap="round"/>
-  <path d="M87.5 144.5C95.1667 157.167 105.5 163.5 118.5 163.5C131.5 163.5 141.5 157.167 148.5 144.5V146C148.5 155.389 140.889 163 131.5 163H105.5C96.1112 163 88.5 155.389 88.5 146V144.5H87.5Z" fill="#09111F"/>
-  <path d="M106 154.5C109.667 159.167 113.667 161.5 118 161.5C122.333 161.5 126.333 159.167 130 154.5C126.7 149.3 122.033 146.7 118 146.7C113.967 146.7 109.3 149.3 106 154.5Z" fill="#FB7185"/>
-
-  <path d="M54 124C44 124 34.5 118 29.5 109" stroke="#101726" stroke-width="10" stroke-linecap="round"/>
-  <path d="M28 108.5C20.5 107.5 13 111 10.5 118.5" stroke="#101726" stroke-width="8" stroke-linecap="round"/>
-  <path d="M173 123C184.5 120.5 194 110.5 196.5 96" stroke="#101726" stroke-width="10" stroke-linecap="round"/>
-  <path d="M194 97L207 81" stroke="#101726" stroke-width="8" stroke-linecap="round"/>
-  <path d="M202.5 70V86.5" stroke="#101726" stroke-width="8" stroke-linecap="round"/>
-  <path d="M194 78H211" stroke="#101726" stroke-width="8" stroke-linecap="round"/>
-  <path d="M75 166L65 197" stroke="#101726" stroke-width="10" stroke-linecap="round"/>
-  <path d="M136 166L145 197" stroke="#101726" stroke-width="10" stroke-linecap="round"/>
-  <rect x="50" y="190" width="42" height="24" rx="12" fill="#fff"/>
-  <rect x="123" y="190" width="42" height="24" rx="12" fill="#fff"/>
-  <path d="M57 201.5H85" stroke="#22C55E" stroke-width="6" stroke-linecap="round"/>
-  <path d="M130 201.5H158" stroke="#22C55E" stroke-width="6" stroke-linecap="round"/>
+    <path d="M39 125C27 124 18 116 14 105" stroke="#052E16" stroke-width="10" stroke-linecap="round"/>
+    <path d="M13 105C7 103 2 107 1 114" stroke="#052E16" stroke-width="7" stroke-linecap="round"/>
+    <path d="M178 129C191 126 200 116 203 101" stroke="#052E16" stroke-width="10" stroke-linecap="round"/>
+    <path d="M203 101L218 84" stroke="#052E16" stroke-width="7" stroke-linecap="round"/>
+    <path d="M211 77V92" stroke="#052E16" stroke-width="7" stroke-linecap="round"/>
+    <path d="M203 85H219" stroke="#052E16" stroke-width="7" stroke-linecap="round"/>
+    <path d="M83 180L73 207" stroke="#052E16" stroke-width="10" stroke-linecap="round"/>
+    <path d="M144 180L153 207" stroke="#052E16" stroke-width="10" stroke-linecap="round"/>
+    <rect x="57" y="200" width="42" height="24" rx="12" fill="#FFFFFF"/>
+    <rect x="134" y="200" width="42" height="24" rx="12" fill="#FFFFFF"/>
+    <path d="M64 212H91" stroke="#16A34A" stroke-width="6" stroke-linecap="round"/>
+    <path d="M141 212H168" stroke="#16A34A" stroke-width="6" stroke-linecap="round"/>
+  </g>
+  <path class="spark" d="M41 43L46 54L58 58L46 62L41 74L36 62L24 58L36 54L41 43Z" fill="#FDE68A"/>
+  <path class="spark" d="M188 33L193 44L205 48L193 52L188 64L183 52L171 48L183 44L188 33Z" fill="#C4B5FD"/>
 </svg>

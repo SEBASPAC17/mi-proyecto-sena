@@ -5,10 +5,12 @@ function registerAuthRoutes(app, deps) {
     requireAuth,
     clearLoginAttempts,
     clearSessionCookie,
+    createBiometricLoginToken,
     createEmailToken,
     createSession,
     ensureDefaultCategoriesForUser,
     enviarError,
+    findBiometricLoginToken,
     findValidToken,
     getActiveLoginBlock,
     isValidEmail,
@@ -20,6 +22,7 @@ function registerAuthRoutes(app, deps) {
     PIN_VALIDATION_MESSAGE,
     registerFailedLogin,
     revokeAllSessionsForUser,
+    revokeBiometricTokensForUser,
     revokeSessionByToken,
     revokeTokens,
     sanitizeText,
@@ -27,7 +30,8 @@ function registerAuthRoutes(app, deps) {
     sendPasswordChangedEmail,
     sendPasswordResetEmail,
     sendVerificationEmail,
-    setSessionCookie
+    setSessionCookie,
+    touchBiometricLoginToken
   } = deps;
 
   app.get("/auth/session", requireAuth, async (req, res) => {
@@ -41,6 +45,58 @@ function registerAuthRoutes(app, deps) {
       return res.json({ ok: true, mensaje: "Sesion cerrada correctamente" });
     } catch (error) {
       return enviarError(res, error, "No se pudo cerrar la sesion");
+    }
+  });
+
+  app.post("/auth/biometric/register", requireAuth, async (req, res) => {
+    try {
+      const token = await createBiometricLoginToken(req.auth.userId, req);
+      await logAuditEvent({
+        idUsuario: req.auth.userId,
+        entidad: "usuarios",
+        entidadId: req.auth.userId,
+        accion: "activar_huella",
+        detalle: { via: "biometric_token" }
+      });
+      return res.json({ ok: true, token });
+    } catch (error) {
+      return enviarError(res, error, "No se pudo activar el ingreso con huella");
+    }
+  });
+
+  app.post("/auth/biometric-login", async (req, res) => {
+    try {
+      const correo = normalizeEmail(req.body?.correo);
+      const token = String(req.body?.token || "").trim();
+
+      if (!isValidEmail(correo) || !token) {
+        return res.status(400).json({ ok: false, mensaje: "Datos de huella invalidos" });
+      }
+
+      const credential = await findBiometricLoginToken(token, correo);
+      if (!credential || !credential.email_verificado) {
+        return res.status(401).json({ ok: false, mensaje: "No se pudo validar la huella para esta cuenta" });
+      }
+
+      await ensureDefaultCategoriesForUser(credential.id_usuario);
+      await touchBiometricLoginToken(credential.id);
+
+      const sessionToken = await createSession(credential.id_usuario, req);
+      setSessionCookie(res, sessionToken);
+
+      return res.json({
+        ok: true,
+        success: true,
+        usuario: {
+          id_usuario: credential.id_usuario,
+          nombre: credential.nombre,
+          correo: credential.correo,
+          datos_autorizados: Number(credential.datos_autorizados) === 1,
+          datos_autorizados_en: credential.datos_autorizados_en || null
+        }
+      });
+    } catch (error) {
+      return enviarError(res, error, "No se pudo iniciar sesion con huella");
     }
   });
 
@@ -66,7 +122,7 @@ function registerAuthRoutes(app, deps) {
       }
 
       const [results] = await pool.query(
-        "SELECT id_usuario,nombre,correo,password,email_verificado FROM usuarios WHERE correo=? LIMIT 1",
+        "SELECT id_usuario,nombre,correo,password,email_verificado,datos_autorizados,datos_autorizados_en FROM usuarios WHERE correo=? LIMIT 1",
         [correo]
       );
 
@@ -98,7 +154,9 @@ function registerAuthRoutes(app, deps) {
         usuario: {
           id_usuario: usuario.id_usuario,
           nombre: usuario.nombre,
-          correo: usuario.correo
+          correo: usuario.correo,
+          datos_autorizados: Number(usuario.datos_autorizados) === 1,
+          datos_autorizados_en: usuario.datos_autorizados_en || null
         }
       });
     } catch (error) {
@@ -258,6 +316,7 @@ function registerAuthRoutes(app, deps) {
       await pool.query("UPDATE usuarios SET password=? WHERE id_usuario=?", [passwordHash, tokenData.id_usuario]);
       await revokeTokens(tokenData.id_usuario, "password_reset");
       await revokeAllSessionsForUser(tokenData.id_usuario);
+      await revokeBiometricTokensForUser(tokenData.id_usuario);
       await logAuditEvent({
         idUsuario: tokenData.id_usuario,
         entidad: "usuarios",

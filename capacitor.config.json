@@ -1,0 +1,8 @@
+{
+  "appId": "com.dinamicash.app",
+  "appName": "Dinamicash",
+  "webDir": "frontend",
+  "server": {
+    "androidScheme": "https"
+  }
+}

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Dinamicash</string>
+    <string name="title_activity_main">Dinamicash</string>
+    <string name="package_name">com.dinamicash.app</string>
+    <string name="custom_url_scheme">com.dinamicash.app</string>
+</resources>

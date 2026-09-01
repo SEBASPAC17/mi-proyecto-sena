@@ -1,5 +1,5 @@
-const META_ICON = "🎯";
-const DEFAULT_ICON = "📦";
+const META_ICON = "\u{1F3AF}";
+const DEFAULT_ICON = "\u{1F4E6}";
 const PIN_REGEX = /^\d{4}$/;
 const PIN_VALIDATION_MESSAGE = "La clave debe ser un PIN numerico de 4 digitos";
 const FRONTEND_URL = (process.env.FRONTEND_URL || "http://localhost:5500/frontend").replace(/\/+$/, "");
@@ -14,21 +14,21 @@ const LOGIN_BLOCK_MINUTES = Math.max(1, Number(process.env.LOGIN_BLOCK_MINUTES |
 const LOGIN_WINDOW_MS = LOGIN_BLOCK_MINUTES * 60 * 1000;
 const MAX_TEXT_LENGTH = 255;
 const DEFAULT_CATEGORIES = [
-  { nombre: "Vivienda", icono: "🏠" },
-  { nombre: "Alimentacion", icono: "🍽️" },
-  { nombre: "Transporte", icono: "🚗" },
-  { nombre: "Servicios", icono: "💡" },
-  { nombre: "Salud", icono: "🩺" },
-  { nombre: "Educacion", icono: "📚" },
-  { nombre: "Entretenimiento", icono: "🎬" },
-  { nombre: "Compras", icono: "🛍️" },
-  { nombre: "Deudas", icono: "💳" },
-  { nombre: "Ahorro", icono: "💰" },
-  { nombre: "Regalos", icono: "🎁" },
-  { nombre: "Viajes", icono: "✈️" },
-  { nombre: "Mascotas", icono: "🐾" },
-  { nombre: "Ropa", icono: "👕" },
-  { nombre: "Otros", icono: "📦" }
+  { nombre: "Vivienda", icono: "\u{1F3E0}" },
+  { nombre: "Alimentacion", icono: "\u{1F37D}\uFE0F" },
+  { nombre: "Transporte", icono: "\u{1F697}" },
+  { nombre: "Servicios", icono: "\u{1F4A1}" },
+  { nombre: "Salud", icono: "\u{1FA7A}" },
+  { nombre: "Educacion", icono: "\u{1F4DA}" },
+  { nombre: "Entretenimiento", icono: "\u{1F3AC}" },
+  { nombre: "Compras", icono: "\u{1F6CD}\uFE0F" },
+  { nombre: "Deudas", icono: "\u{1F4B3}" },
+  { nombre: "Ahorro", icono: "\u{1F4B0}" },
+  { nombre: "Regalos", icono: "\u{1F381}" },
+  { nombre: "Viajes", icono: "\u2708\uFE0F" },
+  { nombre: "Mascotas", icono: "\u{1F43E}" },
+  { nombre: "Ropa", icono: "\u{1F455}" },
+  { nombre: "Otros", icono: DEFAULT_ICON }
 ];
 
 module.exports = {

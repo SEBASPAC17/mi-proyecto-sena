@@ -1,4 +1,4 @@
-﻿const API_URL = window.DinamicashApi?.getBaseUrl?.() || "http://localhost:3000";
+﻿let API_URL = window.DinamicashApi?.getBaseUrl?.() || "http://localhost:3000";
 let usuario = null;
 let metaEnEdicion = null;
 let movimientoEnEdicion = null;
@@ -15,11 +15,144 @@ let wallePdfLogoDataUrl = null;
 let lastWalleResponseSignature = null;
 let walleFinancialSnapshot = null;
 let walleFinancialSnapshotAt = 0;
+let inactivityTimerId = null;
+let sessionClosingForInactivity = false;
 const MAX_WALLE_HISTORY = 20;
+const INACTIVITY_LIMIT_MS = 10 * 60 * 1000;
 const walleConversationState = {
   followUpDepth: 0,
   lastQuestion: "",
-  messages: []
+  messages: [],
+  guidedModule: ""
+};
+
+const WALLE_QUICK_PROMPTS = [
+  { key: "ahorro", number: "1", label: "Ahorro", prompt: "Ahorro" },
+  { key: "gastos", number: "2", label: "Gastos", prompt: "Gastos" },
+  { key: "ingresos", number: "3", label: "Ingresos", prompt: "Ingresos" },
+  { key: "deudas", number: "4", label: "Deudas", prompt: "Deudas" },
+  { key: "tarjetas", number: "5", label: "Tarjetas", prompt: "Tarjetas" }
+];
+
+const WALLE_GUIDED_MODULES = {
+  ahorro: {
+    aliases: ["1", "ahorro", "ahorrar", "quiero ahorrar", "meta de ahorro"],
+    buttons: [
+      { number: "1", label: "Crear meta" },
+      { number: "2", label: "Registrar ahorro" },
+      { number: "3", label: "Ver progreso" },
+      { number: "4", label: "Consejos" }
+    ],
+    response: [
+      "¡Excelente! Vamos a trabajar en tus ahorros.",
+      "¿Deseas:",
+      "1. Crear una meta de ahorro",
+      "2. Registrar dinero ahorrado",
+      "3. Ver tu progreso",
+      "4. Recibir consejos"
+    ].join("\n"),
+    options: {
+      "1": "Perfecto. ¿Cuál es el nombre de tu meta? Ejemplo: Viaje, Moto, Emergencia o PC Gamer.",
+      "2": "Listo. ¿Cuánto dinero ahorraste y para qué meta quieres registrarlo?",
+      "3": "Para ver tu progreso, puedo revisar tus metas registradas y tus aportes. También puedes decirme: analiza mis metas.",
+      "4": "Consejo rápido: separa el ahorro apenas recibas ingresos. Si me dices cuánto ganas, te calculo una meta mensual realista."
+    }
+  },
+  gastos: {
+    aliases: ["2", "gasto", "gastos", "quiero registrar un gasto", "registre un gasto"],
+    buttons: [
+      { number: "1", label: "Registrar gasto" },
+      { number: "2", label: "Resumen mensual" },
+      { number: "3", label: "Categorías" },
+      { number: "4", label: "Consejos" }
+    ],
+    response: [
+      "Vamos a registrar o revisar tus gastos.",
+      "¿Deseas:",
+      "1. Registrar gasto",
+      "2. Ver resumen mensual",
+      "3. Categorías de gasto",
+      "4. Consejos de ahorro"
+    ].join("\n"),
+    options: {
+      "1": "Claro. ¿Cuánto gastaste y en qué categoría fue? Ejemplo: gasté 20 mil en comida.",
+      "2": "Puedo ayudarte con tu resumen. Escribe: analiza mis gastos o genera mi reporte.",
+      "3": "Puedes usar categorías como comida, transporte, entretenimiento, servicios, salud, educación u otros.",
+      "4": "Consejo rápido: revisa gastos pequeños repetidos. Ahí suelen aparecer fugas sin que se noten."
+    }
+  },
+  ingresos: {
+    aliases: ["3", "ingreso", "ingresos", "me pagaron", "registrar ingreso"],
+    buttons: [
+      { number: "1", label: "Registrar ingreso" },
+      { number: "2", label: "Ingresos del mes" },
+      { number: "3", label: "Comparar" },
+      { number: "4", label: "Consejos" }
+    ],
+    response: [
+      "Gestión de ingresos.",
+      "¿Deseas:",
+      "1. Registrar ingreso",
+      "2. Ver ingresos del mes",
+      "3. Comparar ingresos y gastos",
+      "4. Consejos financieros"
+    ].join("\n"),
+    options: {
+      "1": "Perfecto. ¿Cuánto dinero recibiste y cuál fue la fuente? Ejemplo: me pagaron 1.800.000 de salario.",
+      "2": "Para ver tus ingresos del mes, puedes pedirme: analiza mis ingresos.",
+      "3": "Puedo compararlos con tus gastos. Escribe: analiza mis finanzas.",
+      "4": "Consejo rápido: separa ingresos fijos, variables y extras para no gastar como si todo fuera seguro."
+    }
+  },
+  deudas: {
+    aliases: ["4", "deuda", "deudas", "tengo deudas", "tengo muchas deudas"],
+    buttons: [
+      { number: "1", label: "Registrar deuda" },
+      { number: "2", label: "Ver deudas" },
+      { number: "3", label: "Registrar pago" },
+      { number: "4", label: "Consejos" }
+    ],
+    response: [
+      "Entiendo. Vamos a registrar o revisar tus deudas.",
+      "¿Deseas:",
+      "1. Registrar deuda",
+      "2. Ver deudas",
+      "3. Registrar pago",
+      "4. Consejos para salir de deudas"
+    ].join("\n"),
+    options: {
+      "1": "Vamos por partes. ¿A quién le debes y cuánto debes?",
+      "2": "Puedo ayudarte a ordenarlas si me das monto, tasa y fecha de pago de cada una.",
+      "3": "Listo. ¿Qué deuda pagaste y cuánto abonaste?",
+      "4": "Consejo rápido: prioriza deudas con intereses altos y evita tomar deuda nueva mientras te estabilizas."
+    }
+  },
+  tarjetas: {
+    aliases: ["5", "tarjeta", "tarjetas", "tarjeta de credito", "tarjetas de credito"],
+    buttons: [
+      { number: "1", label: "Registrar tarjeta" },
+      { number: "2", label: "Ver cupo" },
+      { number: "3", label: "Registrar compra" },
+      { number: "4", label: "Fecha de corte" },
+      { number: "5", label: "Fecha de pago" }
+    ],
+    response: [
+      "Gestión de tarjetas.",
+      "¿Deseas:",
+      "1. Registrar tarjeta",
+      "2. Ver cupo disponible",
+      "3. Registrar compra",
+      "4. Ver fecha de corte",
+      "5. Ver fecha de pago"
+    ].join("\n"),
+    options: {
+      "1": "Perfecto. ¿La tarjeta es crédito o débito, de qué banco es y cuál es el cupo total?",
+      "2": "Para estimar cupo disponible, dime cupo total y cuánto has usado.",
+      "3": "Claro. ¿Cuánto fue la compra, en qué categoría y con qué tarjeta?",
+      "4": "Dime el banco o la tarjeta y la fecha de corte si la recuerdas.",
+      "5": "Dime la fecha límite de pago y te ayudo a organizar recordatorio mental o consejo de pago."
+    }
+  }
 };
 
 const STORAGE_KEYS = {
@@ -90,6 +223,43 @@ const UI_TEXT = {
     withholdings: "Retenciones ya practicadas",
     simulate: "Simular declaración",
     downloadPdf: "Descargar PDF",
+    reportsTitle: "Reportes",
+    goalsTitle: "Metas de Ahorro",
+    taxTitle: "Declarar Renta",
+    profileTitle: "Perfil",
+    categoryExpensesTitle: "Gastos por categoría",
+    topCategoriesTitle: "Categorías que más gastan",
+    profileEditText: "Consulta y actualiza tus datos básicos",
+    profileNotificationsText: "Revisa avisos y recordatorios de tu cuenta",
+    profileSecurityText: "Administra acceso y protección de tu sesión",
+    profileConfigText: "Personaliza apariencia, idioma y preferencias",
+    profileHelpText: "Envía una solicitud si necesitas acompañamiento",
+    customCategories: "Categorías personalizadas",
+    customCategoriesText: "Las categorías principales ya vienen listas. Si necesitas una propia, créala aquí.",
+    theme: "Apariencia",
+    themeText: "Elige entre modo oscuro o claro.",
+    language: "Idioma",
+    languageText: "Selecciona cómo quieres ver la interfaz.",
+    mobileServer: "Servidor para celular",
+    mobileServerText: "URL HTTPS del backend que usará la APK.",
+    saveSettings: "Guardar configuración",
+    editProfileText: "Actualiza tus datos básicos como en otras apps: nombre y correo.",
+    saveChanges: "Guardar cambios",
+    goalReminders: "Recordatorios de metas",
+    goalRemindersText: "Avisos para no perder de vista tus objetivos.",
+    weeklySummary: "Resumen semanal",
+    weeklySummaryText: "Una vista rápida de ingresos, gastos y balance.",
+    securityAlerts: "Alertas de seguridad",
+    securityAlertsText: "Mensajes cuando haya cambios sensibles en la cuenta.",
+    savePreferences: "Guardar preferencias",
+    updatePin: "Actualizar PIN",
+    securityNote: "Usa un PIN numérico de 4 dígitos y evita repetir el anterior.",
+    sendRequest: "Enviar solicitud",
+    taxNote: "Ingresa los datos de forma aproximada. Si no tienes un valor, puedes dejarlo en cero.",
+    estimatedBase: "Base estimada",
+    estimatedTax: "Impuesto estimado",
+    estimatedBalance: "Saldo estimado",
+    taxGuide: "Guía rápida Colombia",
     walleWelcome: "¡Hola! Soy Walle 👋, tu compañero financiero",
     walleGoodJob: "Buen trabajo 💚",
     walleWatchExpense: "Ojo con ese gasto 👀",
@@ -100,7 +270,7 @@ const UI_TEXT = {
     walleChatSubtitle: "Respuestas rápidas para tus finanzas en Colombia",
     wallePlaceholder: "Escribe tu pregunta...",
     walleSend: "Enviar",
-    walleGreeting: "¡Hola! Pregúntame sobre ahorro, gastos, deudas, tarjetas o ingresos 💚",
+    walleGreeting: "¡Hola! Pregúntame sobre:\nAhorro\nDeudas\nGastos\nTarjetas\nIngresos\n\nTambién puedes escribir tu propia pregunta.",
     walleUnknown: "No estoy seguro de entenderte 🤔 ¿puedes darme un poco más de detalle?",
     loaderStatus: "Cargando datos...",
     walleLoaderMessages: [
@@ -165,6 +335,43 @@ const UI_TEXT = {
     withholdings: "Withholding applied",
     simulate: "Run simulation",
     downloadPdf: "Download PDF",
+    reportsTitle: "Reports",
+    goalsTitle: "Savings Goals",
+    taxTitle: "Income Tax",
+    profileTitle: "Profile",
+    categoryExpensesTitle: "Spending by category",
+    topCategoriesTitle: "Top spending categories",
+    profileEditText: "View and update your basic information",
+    profileNotificationsText: "Review account alerts and reminders",
+    profileSecurityText: "Manage access and session protection",
+    profileConfigText: "Customize appearance, language, and preferences",
+    profileHelpText: "Send a request if you need support",
+    customCategories: "Custom categories",
+    customCategoriesText: "Main categories are ready. Create your own here if you need one.",
+    theme: "Appearance",
+    themeText: "Choose dark or light mode.",
+    language: "Language",
+    languageText: "Select how you want to view the interface.",
+    mobileServer: "Mobile server",
+    mobileServerText: "HTTPS backend URL used by the APK.",
+    saveSettings: "Save settings",
+    editProfileText: "Update your basic details: name and email.",
+    saveChanges: "Save changes",
+    goalReminders: "Goal reminders",
+    goalRemindersText: "Alerts to keep your goals in sight.",
+    weeklySummary: "Weekly summary",
+    weeklySummaryText: "A quick view of income, expenses, and balance.",
+    securityAlerts: "Security alerts",
+    securityAlertsText: "Messages when sensitive account changes happen.",
+    savePreferences: "Save preferences",
+    updatePin: "Update PIN",
+    securityNote: "Use a 4-digit numeric PIN and avoid reusing the previous one.",
+    sendRequest: "Send request",
+    taxNote: "Enter approximate values. If you do not have a value, you can leave it at zero.",
+    estimatedBase: "Estimated base",
+    estimatedTax: "Estimated tax",
+    estimatedBalance: "Estimated balance",
+    taxGuide: "Quick Colombia guide",
     walleWelcome: "Hi! I'm Walle 👋, your financial buddy",
     walleGoodJob: "Nice job 💚",
     walleWatchExpense: "Watch that expense 👀",
@@ -175,7 +382,7 @@ const UI_TEXT = {
     walleChatSubtitle: "Quick answers for your finances in Colombia",
     wallePlaceholder: "Type your question...",
     walleSend: "Send",
-    walleGreeting: "Hi! Ask me about saving, spending, debt, cards or income 💚",
+    walleGreeting: "Hi! Ask me about saving, spending, debt, cards or income. You can also type your own question.",
     walleUnknown: "I'm not fully sure I understood 🤔 can you give me a bit more detail?",
     loaderStatus: "Loading data...",
     walleLoaderMessages: [
@@ -240,6 +447,43 @@ const UI_TEXT = {
     withholdings: "Retenções realizadas",
     simulate: "Simular declaração",
     downloadPdf: "Baixar PDF",
+    reportsTitle: "Relatórios",
+    goalsTitle: "Metas de Poupança",
+    taxTitle: "Declarar Renda",
+    profileTitle: "Perfil",
+    categoryExpensesTitle: "Gastos por categoria",
+    topCategoriesTitle: "Categorias com mais gastos",
+    profileEditText: "Consulte e atualize seus dados básicos",
+    profileNotificationsText: "Revise avisos e lembretes da sua conta",
+    profileSecurityText: "Gerencie acesso e proteção da sessão",
+    profileConfigText: "Personalize aparência, idioma e preferências",
+    profileHelpText: "Envie uma solicitação se precisar de suporte",
+    customCategories: "Categorias personalizadas",
+    customCategoriesText: "As categorias principais já estão prontas. Crie a sua aqui se precisar.",
+    theme: "Aparência",
+    themeText: "Escolha modo escuro ou claro.",
+    language: "Idioma",
+    languageText: "Selecione como deseja ver a interface.",
+    mobileServer: "Servidor para celular",
+    mobileServerText: "URL HTTPS do backend usada pelo APK.",
+    saveSettings: "Salvar configuração",
+    editProfileText: "Atualize seus dados básicos: nome e e-mail.",
+    saveChanges: "Salvar alterações",
+    goalReminders: "Lembretes de metas",
+    goalRemindersText: "Avisos para manter seus objetivos em vista.",
+    weeklySummary: "Resumo semanal",
+    weeklySummaryText: "Uma visão rápida de entradas, gastos e saldo.",
+    securityAlerts: "Alertas de segurança",
+    securityAlertsText: "Mensagens quando houver alterações sensíveis na conta.",
+    savePreferences: "Salvar preferências",
+    updatePin: "Atualizar PIN",
+    securityNote: "Use um PIN numérico de 4 dígitos e evite repetir o anterior.",
+    sendRequest: "Enviar solicitação",
+    taxNote: "Digite valores aproximados. Se não tiver um valor, pode deixar em zero.",
+    estimatedBase: "Base estimada",
+    estimatedTax: "Imposto estimado",
+    estimatedBalance: "Saldo estimado",
+    taxGuide: "Guia rápido Colômbia",
     walleWelcome: "Olá! Eu sou o Walle 👋, seu companheiro financeiro",
     walleGoodJob: "Bom trabalho 💚",
     walleWatchExpense: "Olho nesse gasto 👀",
@@ -250,7 +494,7 @@ const UI_TEXT = {
     walleChatSubtitle: "Respostas rápidas para suas finanças na Colômbia",
     wallePlaceholder: "Escreva sua pergunta...",
     walleSend: "Enviar",
-    walleGreeting: "Olá! Pergunte sobre economia, gastos, dívidas, cartões ou renda 💚",
+    walleGreeting: "Olá! Pergunte sobre economia, gastos, dívidas, cartões ou renda. Você também pode escrever sua própria pergunta.",
     walleUnknown: "Nao tenho certeza se entendi 🤔 pode me dar um pouco mais de detalhe?",
     loaderStatus: "Carregando dados...",
     walleLoaderMessages: [
@@ -1253,6 +1497,74 @@ function storageKey(base) {
   return `${base}_${usuario?.id_usuario || "guest"}`;
 }
 
+function usuarioAutorizoDatos() {
+  return usuario?.datos_autorizados === true || usuario?.datos_autorizados === 1 || usuario?.datos_autorizados === "1";
+}
+
+function mostrarConsentimientoDatosSiHaceFalta() {
+  if (usuarioAutorizoDatos()) return;
+  const check = document.getElementById("checkConsentimientoDatos");
+  if (check) check.checked = false;
+  openModal("modalConsentimientoDatos");
+}
+
+async function aceptarConsentimientoDatos() {
+  const check = document.getElementById("checkConsentimientoDatos");
+  const button = document.getElementById("btnAceptarConsentimiento");
+  if (!check?.checked) {
+    showBanner("consentimientoBanner", "Marca la casilla para autorizar el uso de datos.");
+    return;
+  }
+
+  try {
+    if (button) button.disabled = true;
+    const res = await apiFetch(`${API_URL}/usuarios/${usuario.id_usuario}/consentimiento-datos`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ acepta: true })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      showBanner("consentimientoBanner", data.mensaje || "No se pudo registrar la autorizacion.");
+      return;
+    }
+
+    usuario = {
+      ...usuario,
+      ...(data.usuario || {}),
+      datos_autorizados: true
+    };
+    cerrarModalGenerico("modalConsentimientoDatos");
+    showToast("Autorización registrada correctamente.", "success");
+  } catch (error) {
+    console.error(error);
+    showBanner("consentimientoBanner", "No se pudo registrar la autorizacion.");
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+function resetInactivityTimer() {
+  if (!usuario?.id_usuario || sessionClosingForInactivity) return;
+  clearTimeout(inactivityTimerId);
+  inactivityTimerId = setTimeout(cerrarSesionPorInactividad, INACTIVITY_LIMIT_MS);
+}
+
+async function cerrarSesionPorInactividad() {
+  if (sessionClosingForInactivity) return;
+  sessionClosingForInactivity = true;
+  showToast("Sesión cerrada por 10 minutos de inactividad.", "info", 1800);
+  await logout({ skipConfirm: true, reason: "inactivity" });
+}
+
+function setupInactivityLogout() {
+  const events = ["click", "keydown", "touchstart", "mousemove", "scroll", "input"];
+  events.forEach((eventName) => {
+    document.addEventListener(eventName, resetInactivityTimer, { passive: true });
+  });
+  resetInactivityTimer();
+}
+
 function getConfig() {
   try {
     return { ...DEFAULT_CONFIG, ...JSON.parse(localStorage.getItem(storageKey(STORAGE_KEYS.config)) || "{}") };
@@ -1427,10 +1739,6 @@ function processWalleWithEngine(question) {
   });
 
   if (!result) return "";
-
-  if (!result.intent) {
-    return "";
-  }
 
   persistWalleEngineContext(
     result.context || previousContext,
@@ -1749,7 +2057,7 @@ function buildGreetingResponse(baseResponse, question) {
     return baseResponse;
   }
 
-  return `${baseResponse}\n\n¿Quieres ayuda con ahorro, gastos o deudas? 👀`;
+  return `${baseResponse}\n\nPuedes tocar un tema del cuadro o escribir tu pregunta. Te puedo guiar sobre ahorro, deudas, gastos, tarjetas, ingresos, creditos, bancos y tramites financieros en Colombia.`;
 }
 
 function isWalleFollowUpQuestion(question) {
@@ -2664,10 +2972,355 @@ function shouldUseSnapshotAnalysis(question) {
     "en que estoy gastando",
     "que categoria me pesa",
     "mis metas",
+    "balance",
+    "balances",
+    "valance",
+    "valances",
+    "mi balance",
+    "balance de gastos",
+    "balance gastos",
+    "resumen de gastos",
+    "resumen financiero",
+    "como estan mis gastos",
+    "como estan mis ingresos",
     "revisa mis gastos",
     "revisa mis finanzas",
     "quiero un analisis"
   ].some((term) => normalized.includes(term));
+}
+
+function parseWalleLabeledAmount(normalizedQuestion, labels) {
+  const escaped = labels.map((label) => normalizeWalleText(label).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+  const regex = new RegExp(`(?:${escaped})\\D{0,28}(\\d[\\d.,]*)\\s*(millones?|millon|mill|m|palos?|palo|lucas?|luca|mil|k)?`, "i");
+  const match = normalizedQuestion.match(regex);
+  if (!match) return 0;
+  return parseWalleAmount(match[1], match[2] || "");
+}
+
+function parseWalleDate(text) {
+  const raw = String(text || "");
+  const normalized = normalizeWalleText(raw);
+  const iso = raw.match(/\b(20\d{2})-(\d{1,2})-(\d{1,2})\b/);
+  if (iso) {
+    const [, year, month, day] = iso;
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  const slash = raw.match(/\b(\d{1,2})[/-](\d{1,2})[/-](20\d{2})\b/);
+  if (slash) {
+    const [, day, month, year] = slash;
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  const today = new Date();
+  if (normalized.includes("hoy")) return fechaHoyInput();
+  if (normalized.includes("manana")) {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    return formatearFechaInput(date);
+  }
+
+  const monthMap = {
+    enero: 0,
+    febrero: 1,
+    marzo: 2,
+    abril: 3,
+    mayo: 4,
+    junio: 5,
+    julio: 6,
+    agosto: 7,
+    septiembre: 8,
+    setiembre: 8,
+    octubre: 9,
+    noviembre: 10,
+    diciembre: 11
+  };
+  const monthName = Object.keys(monthMap).find((name) => normalized.includes(name));
+  const dayMatch = normalized.match(/\b(\d{1,2})\b/);
+  if (monthName && dayMatch) {
+    const yearMatch = normalized.match(/\b(20\d{2})\b/);
+    const year = yearMatch ? Number(yearMatch[1]) : today.getFullYear();
+    return formatearFechaInput(new Date(year, monthMap[monthName], Number(dayMatch[1])));
+  }
+
+  const months = extraerPlazoMeses(text);
+  if (months) {
+    const date = new Date();
+    date.setMonth(date.getMonth() + months);
+    return formatearFechaInput(date);
+  }
+
+  return "";
+}
+
+function parseWalleNameAfter(text, triggers) {
+  const normalized = normalizeWalleText(text);
+  for (const trigger of triggers) {
+    const cleanTrigger = normalizeWalleText(trigger);
+    const index = normalized.indexOf(cleanTrigger);
+    if (index >= 0) {
+      const after = normalized.slice(index + cleanTrigger.length).trim();
+      const cleaned = after
+        .replace(/\b(por|de|con|para|hasta|a|al|del|el|la|una|un|que|se llame|llamada|llamado)\b/g, " ")
+        .replace(/\b\d[\d.,]*\s*(millones?|millon|mill|m|palos?|palo|lucas?|luca|mil|k)?\b/g, " ")
+        .replace(/\b\d+\b/g, " ")
+        .replace(/\b(hoy|manana|mañana|en|mes|meses|ano|anos|año|años|fecha|limite|límite)\b/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (cleaned) return cleaned.slice(0, 60);
+    }
+  }
+  return "";
+}
+
+async function fetchWalleMetasYMovimientos() {
+  const [resMetas, resMovimientos] = await Promise.all([
+    apiFetch(`${API_URL}/metas/${usuario.id_usuario}`),
+    apiFetch(`${API_URL}/movimientos/${usuario.id_usuario}`)
+  ]);
+  return {
+    metas: await resMetas.json(),
+    movimientos: await resMovimientos.json()
+  };
+}
+
+async function findWalleMetaByText(text) {
+  const { metas } = await fetchWalleMetasYMovimientos();
+  const normalized = normalizeWalleText(text);
+  return metas.find((meta) => normalized.includes(normalizeWalleText(meta.nombre))) || null;
+}
+
+async function getWalleCategories() {
+  const res = await apiFetch(`${API_URL}/categorias/${usuario.id_usuario}`);
+  return res.json();
+}
+
+async function findWalleCategory(text, tipo = "") {
+  const normalized = normalizeWalleText(text);
+  const categories = await getWalleCategories();
+  const byName = categories.find((category) => normalized.includes(normalizeWalleText(category.nombre)));
+  if (byName) return byName;
+
+  const fallbackNames = tipo === "ingreso"
+    ? ["Ingresos", "Salario", "Otros ingresos"]
+    : ["Otros", "General", "Compras"];
+  return categories.find((category) => fallbackNames.some((name) => normalizeWalleText(category.nombre).includes(normalizeWalleText(name))))
+    || categories.find((category) => !category.es_meta)
+    || null;
+}
+
+function buildWalleReportSummary(snapshot) {
+  if (!snapshot) return "No pude leer tus datos ahora mismo. Intenta de nuevo en un momento.";
+  const categoryLine = snapshot.categoriaDominante
+    ? `Tu categoria mas pesada es ${snapshot.categoriaDominante.nombre} con ${formatoCOP(snapshot.categoriaDominante.total)}.`
+    : "Todavia no hay una categoria dominante clara.";
+  return buildWalleStructuredResponse(
+    `Tu balance general va en ${formatoCOP(snapshot.balance)}: ingresos ${formatoCOP(snapshot.ingresos)} y gastos ${formatoCOP(snapshot.gastos)}.`,
+    `${categoryLine} Este mes llevas ingresos por ${formatoCOP(snapshot.ingresosMes)} y gastos por ${formatoCOP(snapshot.gastosMes)}.`,
+    snapshot.balance < 0
+      ? "Prioriza bajar el gasto mas repetido y evita nuevas deudas este mes."
+      : "Vas con margen positivo. Puedes convertir parte de ese balance en ahorro o aporte a metas."
+  );
+}
+
+async function handleWalleReportActions(question) {
+  const normalized = normalizeWalleText(question);
+  const wantsReportPdf = /(pdf|descarga|descargar|pasame|pasar|enviar|genera|generar).{0,40}(reporte|reportes)|(?:reporte|reportes).{0,40}(pdf|descarga|descargar|pasame|pasar|enviar|genera|generar)/.test(normalized);
+  const wantsReportExcel = /(excel|csv).{0,40}(reporte|reportes)|(?:reporte|reportes).{0,40}(excel|csv)/.test(normalized);
+  const wantsBalance = shouldUseSnapshotAnalysis(question);
+
+  if (wantsReportPdf || wantsReportExcel) {
+    mostrar("reportes");
+    await cargarReportes();
+    if (wantsReportPdf) {
+      await exportarReportePDF();
+      return "Listo, generé el PDF del reporte financiero. Si estás en celular, se abrirá la opción para guardarlo o compartirlo.";
+    }
+    await exportarReporteExcel();
+    return "Listo, generé el archivo de Excel/CSV del reporte. Si estás en celular, elige dónde guardarlo o compartirlo.";
+  }
+
+  if (wantsBalance) {
+    const snapshot = await getWalleFinancialSnapshot(true);
+    return buildWalleReportSummary(snapshot);
+  }
+
+  return "";
+}
+
+async function handleWalleTaxActions(question) {
+  const normalized = normalizeWalleText(question);
+  const wantsTax = /(renta|declaracion|declarar|dian|impuesto)/.test(normalized);
+  const wantsPdf = /(pdf|descarga|descargar|pasame|pasar|enviar|genera|generar|hazme|hacer)/.test(normalized);
+  if (!wantsTax || !wantsPdf) return "";
+
+  const ingresos = parseWalleLabeledAmount(normalized, ["ingresos", "ingreso", "ingresos anuales", "gane", "gano"])
+    || parseNumeroInput(document.getElementById("rentaIngresos")?.value || "");
+  const patrimonio = parseWalleLabeledAmount(normalized, ["patrimonio", "patrimonio bruto", "bienes"])
+    || parseNumeroInput(document.getElementById("rentaPatrimonio")?.value || "");
+  const deducciones = parseWalleLabeledAmount(normalized, ["deducciones", "deduccion", "deducible"])
+    || parseNumeroInput(document.getElementById("rentaDeducciones")?.value || "");
+  const retenciones = parseWalleLabeledAmount(normalized, ["retenciones", "retencion", "retencion practicada", "retenciones practicadas"])
+    || parseNumeroInput(document.getElementById("rentaRetenciones")?.value || "");
+
+  if (!ingresos && !patrimonio) {
+    return "Sí puedo ayudarte con la simulación de renta. Pásame al menos ingresos anuales y/o patrimonio bruto; si tienes deducciones y retenciones, también inclúyelas.";
+  }
+
+  mostrar("renta");
+  document.getElementById("rentaIngresos").value = formatearNumeroInput(ingresos || 0);
+  document.getElementById("rentaPatrimonio").value = formatearNumeroInput(patrimonio || 0);
+  document.getElementById("rentaDeducciones").value = formatearNumeroInput(deducciones || 0);
+  document.getElementById("rentaRetenciones").value = formatearNumeroInput(retenciones || 0);
+  simularRenta();
+  await descargarRentaPDF();
+
+  return buildWalleStructuredResponse(
+    "Listo, hice la simulación de renta con los datos que me diste y generé el PDF.",
+    `Usé ingresos ${formatoCOP(ingresos)}, patrimonio ${formatoCOP(patrimonio)}, deducciones ${formatoCOP(deducciones)} y retenciones ${formatoCOP(retenciones)}.`,
+    "Recuerda que es una orientación y no reemplaza la revisión de un contador ni la declaración oficial ante la DIAN."
+  );
+}
+
+async function handleWalleGoalActions(question) {
+  const normalized = normalizeWalleText(question);
+  if (!/(meta|metas|objetivo|ahorrar para|viaje|comprar)/.test(normalized)) return "";
+
+  const isCreate = /(crea|crear|agrega|agregar|haz|hacer|nueva|nuevo)/.test(normalized);
+  const isDelete = /(elimina|eliminar|borra|borrar|quita|quitar)/.test(normalized);
+  const isUpdate = /(modifica|modificar|actualiza|actualizar|cambia|cambiar|edita|editar)/.test(normalized);
+
+  if (isDelete) {
+    const meta = await findWalleMetaByText(question);
+    if (!meta) return "¿Cuál meta quieres eliminar? Escríbeme el nombre tal como aparece en tus metas.";
+    if (!confirm(`Walle va a eliminar la meta "${meta.nombre}". ¿Quieres continuar?`)) {
+      return "Listo, no eliminé la meta.";
+    }
+    const res = await apiFetch(`${API_URL}/metas/${meta.id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (!res.ok) return data.mensaje || "No pude eliminar esa meta.";
+    invalidateWalleFinancialSnapshot();
+    cargarMetas();
+    cargarCategorias();
+    return `Listo, eliminé la meta "${meta.nombre}".`;
+  }
+
+  if (isUpdate) {
+    const meta = await findWalleMetaByText(question);
+    if (!meta) return "¿Cuál meta quieres modificar? Dime el nombre de la meta.";
+    const monto = extraerMonto(question) || Number(meta.monto);
+    const fecha = parseWalleDate(question) || (meta.fecha_limite?.split("T")[0] || meta.fecha_limite);
+    const nombre = parseWalleNameAfter(question, ["renombrar meta", "cambiar nombre", "se llame"]) || meta.nombre;
+    if (!confirm(`Walle va a modificar la meta "${meta.nombre}". ¿Quieres continuar?`)) {
+      return "Listo, no modifiqué la meta.";
+    }
+    const res = await apiFetch(`${API_URL}/metas/${meta.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre, monto, fecha_limite: fecha })
+    });
+    const data = await res.json();
+    if (!res.ok) return data.mensaje || "No pude modificar esa meta.";
+    invalidateWalleFinancialSnapshot();
+    cargarMetas();
+    cargarCategorias();
+    return `Listo, actualicé la meta "${nombre}" con monto ${formatoCOP(monto)} y fecha ${fecha}.`;
+  }
+
+  if (isCreate) {
+    const monto = extraerMonto(question);
+    const fecha = parseWalleDate(question);
+    const nombre = parseWalleNameAfter(question, ["meta", "ahorrar para", "objetivo", "comprar"]) || "Nueva meta";
+    if (!monto) return "¿De cuánto será la meta? Ejemplo: crea una meta viaje por 2 millones en 6 meses.";
+    if (!fecha) return "¿Para qué fecha o en cuántos meses quieres lograr esa meta?";
+
+    const res = await apiFetch(`${API_URL}/metas`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre, monto, fecha_limite: fecha })
+    });
+    const data = await res.json();
+    if (!res.ok) return data.mensaje || "No pude crear la meta.";
+    invalidateWalleFinancialSnapshot();
+    cargarMetas();
+    cargarCategorias();
+    return `Listo, creé la meta "${nombre}" por ${formatoCOP(monto)} para el ${fecha}.`;
+  }
+
+  return "";
+}
+
+async function handleWalleMovementActions(question) {
+  const normalized = normalizeWalleText(question);
+  if (!/(movimiento|gasto|ingreso|compra|pago|registre|registra|agrega|agregar|elimina|eliminar|borra|modifica|actualiza)/.test(normalized)) return "";
+
+  const isCreate = /(registra|registrar|agrega|agregar|crea|crear|anota|guardar|guarda)/.test(normalized);
+  const isDelete = /(elimina|eliminar|borra|borrar|quita|quitar)/.test(normalized);
+  const isUpdate = /(modifica|modificar|actualiza|actualizar|cambia|cambiar|edita|editar)/.test(normalized);
+
+  if (isDelete) {
+    const snapshot = await getWalleFinancialSnapshot(true);
+    const target = (snapshot?.movimientos || []).find((movement) => {
+      const haystack = normalizeWalleText(`${movement.categoria || ""} ${movement.descripcion || ""} ${movement.monto || ""}`);
+      return normalized.includes(normalizeWalleText(movement.categoria || "")) || (movement.descripcion && normalized.includes(normalizeWalleText(movement.descripcion)));
+    });
+    if (!target) return "¿Cuál movimiento quieres eliminar? Dime categoría, descripción o monto para ubicarlo.";
+    if (!confirm(`Walle va a eliminar el movimiento "${target.descripcion || target.categoria}" por ${formatoCOP(target.monto)}. ¿Continuar?`)) {
+      return "Listo, no eliminé el movimiento.";
+    }
+    const res = await apiFetch(`${API_URL}/movimientos/${target.id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (!res.ok) return data.mensaje || "No pude eliminar ese movimiento.";
+    invalidateWalleFinancialSnapshot();
+    cargar();
+    cargarReportes();
+    cargarMetas();
+    return "Listo, eliminé el movimiento.";
+  }
+
+  if (isUpdate) {
+    return "Puedo ayudarte a modificar movimientos, pero necesito ubicarlo con claridad. Dime: cambia el movimiento de [categoria o descripcion] a [nuevo monto] y, si aplica, la fecha.";
+  }
+
+  if (isCreate) {
+    const monto = extraerMonto(question);
+    if (!monto) return "¿Por cuánto fue el movimiento? Dime el monto para registrarlo.";
+    const tipo = /(ingreso|salario|sueldo|me pagaron|me entro|ganancia|venta)/.test(normalized) ? "ingreso" : "gasto";
+    const category = await findWalleCategory(question, tipo);
+    if (!category?.id) return "No encontré una categoría para ese movimiento. Crea o elige una categoría primero.";
+    const fecha = parseWalleDate(question) || fechaHoyInput();
+    const descripcion = parseWalleNameAfter(question, ["por", "de", "en", "compra", "pago"]) || (tipo === "ingreso" ? "Ingreso registrado por Walle" : "Gasto registrado por Walle");
+    const res = await apiFetch(`${API_URL}/movimientos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tipo, monto, descripcion, categoria_id: category.id, fecha })
+    });
+    const data = await res.json();
+    if (!res.ok) return data.mensaje || "No pude registrar el movimiento.";
+    invalidateWalleFinancialSnapshot();
+    cargar();
+    cargarReportes();
+    cargarMetas();
+    return `Listo, registré un ${tipo} por ${formatoCOP(monto)} en ${category.nombre}.`;
+  }
+
+  return "";
+}
+
+async function getWalleActionResponse(question) {
+  const handlers = [
+    handleWalleTaxActions,
+    handleWalleReportActions,
+    handleWalleGoalActions,
+    handleWalleMovementActions
+  ];
+
+  for (const handler of handlers) {
+    const response = await handler(question);
+    if (response) return response;
+  }
+
+  return "";
 }
 
 async function getAdvancedWalleResponse(question) {
@@ -2842,6 +3495,94 @@ async function getAdvancedWalleResponse(question) {
   return "";
 }
 
+function buildWalleKnowledgeResponse(question) {
+  const normalized = normalizeWalleText(question);
+
+  const knowledgeRules = [
+    {
+      test: /(que puedes hacer|que sabes hacer|ayuda|ayudame|como funcionas|para que sirves)/,
+      intent: "ayuda_app",
+      response: [
+        "Puedo ayudarte con tres cosas: responder dudas financieras, hacer calculos con tus datos y moverme por la app.",
+        "Por ejemplo: registra un gasto de 20 mil en comida, crea una meta de viaje por 2 millones, genera mi reporte en PDF, analiza mis gastos o calcula una cuota de credito.",
+        "Tambien puedo seguir el hilo si me das ingreso, deudas, tasas o metas."
+      ].join("\n")
+    },
+    {
+      test: /(como registro|registrar|agregar|anotar).{0,35}(gasto|ingreso|movimiento)|(?:gasto|ingreso|movimiento).{0,35}(como registro|registrar|agregar|anotar)/,
+      intent: "movimientos",
+      response: [
+        "Para registrar un movimiento puedes usar el boton + o pedirmelo directo.",
+        "Ejemplo: registra un gasto de 25000 en transporte hoy, o agrega un ingreso de 1 millon por salario.",
+        "Si no encuentro la categoria, te aviso para que la crees o la elijas."
+      ].join("\n")
+    },
+    {
+      test: /(categoria|categorias|crear categoria|nueva categoria|organizar categorias)/,
+      intent: "categorias",
+      response: [
+        "Las categorias sirven para que tus reportes sean mas claros.",
+        "Puedes usar las principales o crear una propia desde Perfil > Gestionar categorias.",
+        "Para que Walle acierte mejor, usa nombres concretos como comida, transporte, arriendo, servicios, deudas o ahorro."
+      ].join("\n")
+    },
+    {
+      test: /(reporte|reportes|grafica|graficas|balance|resumen).{0,35}(como|ver|mostrar|sirve|funciona)|(?:como|ver|mostrar).{0,35}(reporte|reportes|balance|resumen)/,
+      intent: "reportes",
+      response: [
+        "En Reportes ves ingresos, gastos, balance y categorias que mas pesan.",
+        "Si me pides analiza mis finanzas, uso tus movimientos recientes para decirte donde hay fugas y que podria mejorar.",
+        "Tambien puedes pedirme genera mi reporte en PDF o en Excel."
+      ].join("\n")
+    },
+    {
+      test: /(meta|metas|objetivo).{0,35}(como|crear|funciona|sirve|ahorro)|(?:crear|hacer).{0,35}(meta|objetivo)/,
+      intent: "metas",
+      response: [
+        "Las metas son para separar objetivos concretos: viaje, estudio, emergencia o una compra grande.",
+        "Puedes crear una meta manualmente o decirme algo como: crea una meta viaje por 2 millones en 6 meses.",
+        "Si me das ingreso, monto y plazo, te calculo cuanto tendrias que guardar al mes."
+      ].join("\n")
+    },
+    {
+      test: /(renta|dian|declaracion|declarar|impuesto).{0,40}(como|sirve|funciona|calcula|simula)/,
+      intent: "renta",
+      response: [
+        "La seccion de Renta es una simulacion orientativa para Colombia.",
+        "Usa ingresos anuales, patrimonio, deducciones y retenciones para darte una aproximacion.",
+        "No reemplaza a un contador, pero te ayuda a saber si debes revisar el tema con mas calma."
+      ].join("\n")
+    },
+    {
+      test: /(seguridad|pin|huella|recordarme|sesion|contraseña|contrasena)/,
+      intent: "seguridad",
+      response: [
+        "En seguridad puedes cambiar tu PIN y cuidar el acceso a la cuenta.",
+        "Si activas Recordar correo en el login, la app solo guarda tu correo en este dispositivo.",
+        "Por seguridad, tu PIN no se guarda y tendras que escribirlo al ingresar."
+      ].join("\n")
+    },
+    {
+      test: /(gracias|muchas gracias|super|listo|ok gracias)/,
+      intent: "cortesia",
+      response: "Con gusto. Cuando quieras seguimos con tus gastos, metas, deudas o reportes."
+    }
+  ];
+
+  const match = knowledgeRules.find((rule) => rule.test.test(normalized));
+  if (!match) return "";
+
+  updateWalleContext({ intent: match.intent }, null, {
+    ...(lastTopicDetail || {}),
+    question
+  });
+  saveWalleMemory({
+    lastRecommendation: match.response,
+    lastProblemCategory: match.intent
+  });
+  return match.response;
+}
+
 function buildWalleReply(baseResponse, intent, subintent = null) {
   const followUp = getWalleFollowUp(intent?.intent, subintent?.intent);
   return followUp ? `${baseResponse}\n\n${followUp}` : baseResponse;
@@ -2851,6 +3592,11 @@ async function getWalleResponse(question) {
   const normalizedQuestion = normalizeWalleText(question);
   if (!normalizedQuestion) {
     return tx("walleGreeting");
+  }
+
+  const actionResponse = await getWalleActionResponse(question);
+  if (actionResponse) {
+    return actionResponse;
   }
 
   const engineResponse = processWalleWithEngine(question);
@@ -2866,6 +3612,11 @@ async function getWalleResponse(question) {
   const advancedResponse = await getAdvancedWalleResponse(question);
   if (advancedResponse) {
     return advancedResponse;
+  }
+
+  const knowledgeResponse = buildWalleKnowledgeResponse(question);
+  if (knowledgeResponse) {
+    return knowledgeResponse;
   }
 
   const historyResponse = buildWalleHistoryDrivenResponse(question);
@@ -2988,6 +3739,84 @@ function appendWalleChatMessage(role, message) {
   container.scrollTop = container.scrollHeight;
 }
 
+function getWalleGuidedModuleFromText(text) {
+  const normalized = normalizeWalleText(text);
+  if (!normalized) return null;
+
+  return Object.entries(WALLE_GUIDED_MODULES).find(([, module]) =>
+    module.aliases.some((alias) => normalized === normalizeWalleText(alias) || normalized.includes(normalizeWalleText(alias)))
+  )?.[0] || null;
+}
+
+function getWalleGuidedResponse(question) {
+  const normalized = normalizeWalleText(question);
+  const currentModule = walleConversationState.guidedModule;
+
+  if (["menu", "menú", "inicio", "volver", "temas"].includes(normalized) || isPureGreeting(normalized)) {
+    walleConversationState.guidedModule = "";
+    return tx("walleGreeting");
+  }
+
+  if (currentModule && /^[1-5]$/.test(normalized)) {
+    return WALLE_GUIDED_MODULES[currentModule]?.options?.[normalized] || "";
+  }
+
+  const moduleKey = getWalleGuidedModuleFromText(question);
+  if (!moduleKey) return "";
+
+  walleConversationState.guidedModule = moduleKey;
+  return WALLE_GUIDED_MODULES[moduleKey].response;
+}
+
+function getWalleQuickActionItems(moduleKey = "") {
+  const module = moduleKey ? WALLE_GUIDED_MODULES[moduleKey] : null;
+  if (!module?.buttons?.length) {
+    return WALLE_QUICK_PROMPTS.map((item) => ({
+      ...item,
+      prompt: item.prompt
+    }));
+  }
+
+  return [
+    ...module.buttons.map((item) => ({
+      ...item,
+      prompt: item.number
+    })),
+    { number: "↩", label: "Menú", prompt: "menu" }
+  ];
+}
+
+function appendWalleGuidedOptions(moduleKey = "") {
+  const container = document.getElementById("walleChatMessages");
+  if (!container) return;
+  container.querySelectorAll(".walle-chat-options-row").forEach((row) => row.remove());
+
+  const row = document.createElement("div");
+  row.className = "walle-chat-row bot walle-chat-options-row";
+
+  const avatar = document.createElement("img");
+  avatar.className = "walle-chat-mini";
+  avatar.src = "assets/walle-happy.svg";
+  avatar.alt = "Walle";
+  row.appendChild(avatar);
+
+  const options = document.createElement("div");
+  options.className = "walle-chat-options";
+
+  getWalleQuickActionItems(moduleKey).forEach((item) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = `${item.number}. ${item.label}`;
+    button.title = item.label;
+    button.addEventListener("click", () => enviarPreguntaWalleDesdeTexto(item.prompt));
+    options.appendChild(button);
+  });
+
+  row.appendChild(options);
+  container.appendChild(row);
+  container.scrollTop = container.scrollHeight;
+}
+
 function abrirChatWalle() {
   const messages = document.getElementById("walleChatMessages");
   const input = document.getElementById("walleQuestionInput");
@@ -2999,8 +3828,10 @@ function abrirChatWalle() {
       history.forEach((entry) => appendWalleChatMessage(entry.role, entry.message));
     } else {
       appendWalleChatMessage("bot", tx("walleGreeting"));
+      appendWalleGuidedOptions();
       saveWalleHistoryEntry("bot", tx("walleGreeting"), { intent: "saludo" });
     }
+    appendWalleGuidedOptions(walleConversationState.guidedModule);
     messages.dataset.initialized = "1";
   }
 
@@ -3011,30 +3842,39 @@ function abrirChatWalle() {
   }
 }
 
-function enviarPreguntaWalle(event) {
-  event.preventDefault();
+function enviarPreguntaWalleDesdeTexto(question) {
   const input = document.getElementById("walleQuestionInput");
-  const question = input?.value.trim();
-  if (!question) return;
+  const normalizedQuestion = String(question || "").trim();
+  if (!normalizedQuestion) return;
 
-  appendWalleChatMessage("user", question);
-  saveWalleHistoryEntry("user", question, {
+  appendWalleChatMessage("user", normalizedQuestion);
+  saveWalleHistoryEntry("user", normalizedQuestion, {
     intent: lastIntent?.intent || null,
     subintent: lastSubintent?.intent || null,
-    incomeAmount: extractWalleIncomeAmount(question) || getRememberedIncome()
+    incomeAmount: extractWalleIncomeAmount(normalizedQuestion) || getRememberedIncome()
   });
   if (input) input.value = "";
 
   setTimeout(async () => {
-    const rawResponse = await getWalleResponse(question);
-    const response = finalizeWalleOutgoingResponse(question, rawResponse);
+    const guidedResponse = getWalleGuidedResponse(normalizedQuestion);
+    const rawResponse = guidedResponse || await getWalleResponse(normalizedQuestion);
+    const response = finalizeWalleOutgoingResponse(normalizedQuestion, rawResponse);
     appendWalleChatMessage("bot", response);
+    if (guidedResponse || isPureGreeting(normalizedQuestion)) {
+      appendWalleGuidedOptions(walleConversationState.guidedModule);
+    }
     saveWalleHistoryEntry("bot", response, {
       intent: lastIntent?.intent || null,
       subintent: lastSubintent?.intent || null,
       incomeAmount: getRememberedIncome()
     });
   }, 220);
+}
+
+function enviarPreguntaWalle(event) {
+  event.preventDefault();
+  const input = document.getElementById("walleQuestionInput");
+  enviarPreguntaWalleDesdeTexto(input?.value.trim());
 }
 
 function setupWalleChatModal() {
@@ -3065,6 +3905,9 @@ function setupGlobalModals() {
 
     if (!modal.dataset.boundBackdrop) {
       modal.addEventListener("click", (event) => {
+        if (modal.dataset.required === "true") {
+          return;
+        }
         if (event.target === modal) {
           cerrarModalGenerico(modal.id);
         }
@@ -3208,7 +4051,20 @@ function applyLanguage() {
   setText("navMetas", texts.goals);
   setText("navRenta", texts.tax);
   setText("navPerfil", texts.profile);
+  setText("tituloReportes", texts.reportsTitle);
+  setText("tituloMetas", texts.goalsTitle);
+  setText("tituloRenta", texts.taxTitle);
+  setText("tituloPerfil", texts.profileTitle);
+  setText("tituloGastosCategoria", texts.categoryExpensesTitle);
+  setText("tituloTopCategorias", texts.topCategoriesTitle);
   setText("perfilConfigTitulo", texts.settings);
+  setText("perfilConfigTexto", texts.profileConfigText);
+  setText("perfilEditarTexto", texts.profileEditText);
+  setText("perfilNotificacionesTexto", texts.profileNotificationsText);
+  setText("perfilSeguridadTexto", texts.profileSecurityText);
+  setText("perfilAyudaTexto", texts.profileHelpText);
+  setText("perfilCategoriasTitulo", texts.customCategories);
+  setText("perfilCategoriasTexto", texts.customCategoriesText);
   setText("modalMovimientoTitulo", texts.movement);
   setText("btnGuardarMovimiento", texts.save);
   setText("btnNuevaCategoriaMovimiento", texts.newCategory);
@@ -3226,12 +4082,46 @@ function applyLanguage() {
   setText("progresoTotalLabel", texts.progressTotal);
   setText("resultadoRentaTitulo", texts.resultEstimated);
   setText("rentaCardTitle", texts.simpleSimulator);
+  setText("rentaCardNote", texts.taxNote);
   setText("rentaIngresosLabel", texts.annualIncome);
   setText("rentaPatrimonioLabel", texts.grossAssets);
   setText("rentaDeduccionesLabel", texts.estimatedDeductions);
   setText("rentaRetencionesLabel", texts.withholdings);
   setText("btnSimularRenta", texts.simulate);
   setText("btnDescargarRenta", texts.downloadPdf);
+  setText("rentaBaseLabel", texts.estimatedBase);
+  setText("rentaImpuestoLabel", texts.estimatedTax);
+  setText("rentaSaldoLabel", texts.estimatedBalance);
+  setText("rentaGuiaTitulo", texts.taxGuide);
+  setText("modalEditarPerfilTitulo", texts.editProfile);
+  setText("textoEditarPerfil", texts.editProfileText);
+  setText("btnGuardarPerfil", texts.saveChanges);
+  setText("btnCancelarPerfil", texts.cancel);
+  setText("modalNotificacionesTitulo", texts.notifications);
+  setText("notifRecordatoriosTitulo", texts.goalReminders);
+  setText("notifRecordatoriosTexto", texts.goalRemindersText);
+  setText("notifResumenTitulo", texts.weeklySummary);
+  setText("notifResumenTexto", texts.weeklySummaryText);
+  setText("notifSeguridadTitulo", texts.securityAlerts);
+  setText("notifSeguridadTexto", texts.securityAlertsText);
+  setText("btnGuardarNotificaciones", texts.savePreferences);
+  setText("btnCerrarNotificaciones", texts.close);
+  setText("modalSeguridadTitulo", texts.security);
+  setText("seguridadTexto", texts.securityNote);
+  setText("btnGuardarSeguridad", texts.updatePin);
+  setText("btnCancelarSeguridad", texts.cancel);
+  setText("modalConfiguracionTitulo", texts.settings);
+  setText("configTemaTitulo", texts.theme);
+  setText("configTemaTexto", texts.themeText);
+  setText("configIdiomaTitulo", texts.language);
+  setText("configIdiomaTexto", texts.languageText);
+  setText("configApiTitulo", texts.mobileServer);
+  setText("configApiTexto", texts.mobileServerText);
+  setText("btnGuardarConfiguracion", texts.saveSettings);
+  setText("btnCancelarConfiguracion", texts.cancel);
+  setText("modalAyudaTitulo", texts.help);
+  setText("btnEnviarAyuda", texts.sendRequest);
+  setText("btnCancelarAyuda", texts.cancel);
   const walleQuestionInput = document.getElementById("walleQuestionInput");
   if (walleQuestionInput) {
     walleQuestionInput.placeholder = texts.wallePlaceholder;
@@ -3289,6 +4179,15 @@ function configurarEntradasMoneda() {
   document.querySelectorAll(".entrada-moneda").forEach((input) => {
     input.addEventListener("input", (event) => {
       event.target.value = formatearNumeroInput(event.target.value);
+    });
+    input.addEventListener("focus", () => {
+      setTimeout(() => {
+        try {
+          input.setSelectionRange(input.value.length, input.value.length);
+        } catch (error) {
+          // Some Android keyboards do not expose selection APIs for numeric inputs.
+        }
+      }, 0);
     });
   });
 }
@@ -3428,6 +4327,92 @@ function limpiarFiltrosMesSiHayRango() {
   }
 }
 
+function setupCriticalMobileActions() {
+  const actions = {
+    btnNuevoMovimiento: () => abrirModal(),
+    btnSimularRenta: () => simularRenta(),
+    btnDescargarRenta: () => descargarRentaPDF(),
+    btnExportarReportePDF: () => exportarReportePDF(),
+    btnExportarReporteExcel: () => exportarReporteExcel(),
+    perfilCategoriasBtn: () => abrirCategorias(),
+    perfilLogoutBtn: () => logout()
+  };
+
+  const menuTargets = new Set(["inicio", "reportes", "metas", "renta", "perfil"]);
+  const profileActions = {
+    editar: () => editarPerfil(),
+    notificaciones: () => verNotificaciones(),
+    seguridad: () => verSeguridad(),
+    configuracion: () => abrirConfiguracion(),
+    ayuda: () => ayuda()
+  };
+
+  document.addEventListener("click", (event) => {
+    const menuItem = event.target.closest?.(".menu-item[data-target]");
+    if (menuItem && menuTargets.has(menuItem.dataset.target)) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (onboardingState.active) cerrarGuiaUsuario(true);
+      mostrar(menuItem.dataset.target);
+      return;
+    }
+
+    const button = event.target.closest?.("button");
+    if (!button) return;
+
+    const fabMenu = button.closest("#fabMenu");
+    const fabStack = document.getElementById("fabStack");
+    if (fabMenu && !fabStack?.classList.contains("open")) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+
+    const helpTarget = button.dataset?.helpTarget;
+    if (helpTarget) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      toggleAyudaCampo(helpTarget);
+      return;
+    }
+
+    const handler = actions[button.id];
+    if (handler) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (onboardingState.active) cerrarGuiaUsuario(true);
+      handler();
+      return;
+    }
+
+    const profileAction = button.closest(".perfil-menu-item");
+    if (!profileAction) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (onboardingState.active) cerrarGuiaUsuario(true);
+
+    const actionName = profileAction.dataset?.profileAction;
+    if (profileActions[actionName]) {
+      profileActions[actionName]();
+    } else if (profileAction.textContent.includes("Editar") || profileAction.querySelector("#perfilEditarTitulo")) editarPerfil();
+    else if (profileAction.textContent.includes("Notificaciones") || profileAction.querySelector("#perfilNotificacionesTitulo")) verNotificaciones();
+    else if (profileAction.textContent.includes("Seguridad") || profileAction.querySelector("#perfilSeguridadTitulo")) verSeguridad();
+    else if (profileAction.querySelector("#perfilConfigTitulo")) abrirConfiguracion();
+    else if (profileAction.querySelector("#perfilAyudaTitulo")) ayuda();
+  }, true);
+
+  ["rentaIngresos", "rentaPatrimonio", "rentaDeducciones", "rentaRetenciones"].forEach((id) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    input.removeAttribute("disabled");
+    input.removeAttribute("readonly");
+    input.addEventListener("pointerup", () => input.focus());
+    input.addEventListener("click", () => input.focus());
+    input.addEventListener("touchend", () => setTimeout(() => input.focus(), 0), { passive: true });
+  });
+}
+
 function toggleFabMenu() {
   const stack = document.getElementById("fabStack");
   const trigger = document.getElementById("fabMain");
@@ -3476,11 +4461,14 @@ window.onload = async () => {
   window.WalleController?.init();
   setupGlobalModals();
   setupWalleChatModal();
+  setupInactivityLogout();
+  setupCriticalMobileActions();
   poblarSelectorIconos();
   configurarEntradasMoneda();
   applyPreferences();
   mostrarMensajeCargaWalleAleatorio();
   configurarPerfil();
+  mostrarConsentimientoDatosSiHaceFalta();
   document.getElementById("fechaMovimiento").value = fechaHoyInput();
   document.getElementById("filtroAnioReportes").value = new Date().getFullYear();
   document.getElementById("fechaInicioReportes").addEventListener("change", limpiarFiltrosMesSiHayRango);
@@ -3750,11 +4738,11 @@ async function eliminarCategoria(id) {
 async function guardar() {
   const tipo = document.getElementById("tipo").value;
   const monto = parseNumeroInput(document.getElementById("monto").value);
-  const categoria_id = document.getElementById("categoria").value;
+  const categoria_id = Number(document.getElementById("categoria").value);
   const descripcion = document.getElementById("descripcion").value.trim();
   const fecha = document.getElementById("fechaMovimiento").value;
 
-  if (!categoria_id) {
+  if (!Number.isInteger(categoria_id) || categoria_id <= 0) {
     showToast(tx("categoryRequired"), "error");
     return;
   }
@@ -4116,7 +5104,61 @@ async function cargarReportes() {
   }
 }
 
-function exportarReporteExcel() {
+function csvEscape(value) {
+  const text = String(value ?? "");
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function stringToBase64(text) {
+  const bytes = new TextEncoder().encode(text);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary);
+}
+
+async function saveTextDocument(content, fileName, mimeType, shareText) {
+  const safeFileName = String(fileName || `dinamicash-${Date.now()}.txt`).replace(/[\\/:*?"<>|]+/g, "-");
+  const Filesystem = getCapacitorPlugin("Filesystem");
+  const Share = getCapacitorPlugin("Share");
+
+  if (isNativeAndroidApp() && Filesystem) {
+    const Directory = window.Capacitor?.FilesystemDirectory || { Cache: "CACHE", Documents: "DOCUMENTS" };
+    const result = await Filesystem.writeFile({
+      path: safeFileName,
+      data: stringToBase64(content),
+      directory: Directory.Cache
+    });
+
+    if (Share?.share) {
+      await Share.share({
+        title: "Dinamicash Wallet",
+        text: shareText || "Archivo generado por Dinamicash Wallet",
+        url: result.uri,
+        dialogTitle: "Guardar o compartir archivo"
+      });
+      showToast("Archivo listo. Elige dónde guardarlo o compartirlo.", "success");
+      return;
+    }
+
+    alert(`Archivo generado. Ubicación temporal: ${result.uri}`);
+    return;
+  }
+
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = safeFileName;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function exportarReporteExcel() {
   if (!ultimoReporte) {
     alert("Primero carga un reporte.");
     return;
@@ -4135,13 +5177,18 @@ function exportarReporteExcel() {
   rows.push(["Categoria", "Total"]);
   (ultimoReporte.categories || []).forEach((item) => rows.push([item.categoria, item.total]));
 
-  const csv = rows.map((row) => row.join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `dinamicash-reporte-${Date.now()}.csv`;
-  link.click();
-  URL.revokeObjectURL(link.href);
+  const csv = `\uFEFF${rows.map((row) => row.map(csvEscape).join(",")).join("\n")}`;
+  try {
+    await saveTextDocument(
+      csv,
+      `dinamicash-reporte-${Date.now()}.csv`,
+      "text/csv;charset=utf-8;",
+      "Reporte CSV generado por Dinamicash Wallet"
+    );
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo generar o guardar el reporte de Excel.");
+  }
 }
 
 async function getPdfLogoDataUrl() {
@@ -4193,6 +5240,46 @@ async function addPdfBrandHeader(doc, title, subtitle, options = {}) {
   doc.line(14, 56, 196, 56);
 }
 
+function getCapacitorPlugin(name) {
+  return window.Capacitor?.Plugins?.[name] || window[name] || null;
+}
+
+function isNativeAndroidApp() {
+  return window.Capacitor?.isNativePlatform?.() || window.Capacitor?.getPlatform?.() === "android";
+}
+
+async function savePdfDocument(doc, fileName) {
+  const safeFileName = String(fileName || `dinamicash-${Date.now()}.pdf`).replace(/[\\/:*?"<>|]+/g, "-");
+  const Filesystem = getCapacitorPlugin("Filesystem");
+  const Share = getCapacitorPlugin("Share");
+
+  if (isNativeAndroidApp() && Filesystem) {
+    const Directory = window.Capacitor?.FilesystemDirectory || { Cache: "CACHE", Documents: "DOCUMENTS" };
+    const data = doc.output("datauristring").split(",")[1];
+    const result = await Filesystem.writeFile({
+      path: safeFileName,
+      data,
+      directory: Directory.Cache
+    });
+
+    if (Share?.share) {
+      await Share.share({
+        title: "Dinamicash Wallet",
+        text: "PDF generado por Dinamicash Wallet",
+        url: result.uri,
+        dialogTitle: "Guardar o compartir PDF"
+      });
+      showToast("PDF listo. Elige dónde guardarlo o compartirlo.", "success");
+      return;
+    }
+
+    alert(`PDF generado. Archivo temporal: ${result.uri}`);
+    return;
+  }
+
+  doc.save(safeFileName);
+}
+
 async function exportarReportePDF() {
   if (!ultimoReporte) {
     alert("Primero carga un reporte.");
@@ -4240,10 +5327,10 @@ async function exportarReportePDF() {
       y += 8;
     });
 
-    doc.save(`dinamicash-reporte-${Date.now()}.pdf`);
+    await savePdfDocument(doc, `dinamicash-reporte-${Date.now()}.pdf`);
   } catch (error) {
     console.error(error);
-    alert("No se pudo agregar el logo al PDF.");
+    alert("No se pudo generar o guardar el PDF.");
   }
 }
 
@@ -4668,10 +5755,10 @@ async function descargarRentaPDF() {
     doc.text(notaLineas, 14, y);
 
     const fechaArchivo = simulacion.fecha.toISOString().slice(0, 10);
-    doc.save(`dinamicash-renta-${fechaArchivo}.pdf`);
+    await savePdfDocument(doc, `dinamicash-renta-${fechaArchivo}.pdf`);
   } catch (error) {
     console.error(error);
-    alert("No se pudo agregar el logo al PDF.");
+    alert("No se pudo generar o guardar el PDF.");
   }
 }
 
@@ -4787,6 +5874,10 @@ function abrirConfiguracion() {
   const config = getConfig();
   document.getElementById("configTema").value = config.theme;
   document.getElementById("configIdioma").value = config.language;
+  const apiInput = document.getElementById("configApiUrl");
+  if (apiInput) {
+    apiInput.value = window.DinamicashApi?.getSavedApiUrl?.() || "";
+  }
   openModal("modalConfiguracion");
 }
 
@@ -4797,6 +5888,16 @@ function guardarConfiguracion() {
   };
 
   saveConfig(config);
+  const apiInput = document.getElementById("configApiUrl");
+  if (apiInput) {
+    const apiValue = apiInput.value.trim();
+    if (apiValue && !/^https?:\/\/[^/]+/i.test(apiValue)) {
+      alert("Escribe una URL valida para el backend, por ejemplo https://api.tu-dominio.com");
+      return;
+    }
+    window.DinamicashApi?.saveApiUrl?.(apiValue);
+    API_URL = window.DinamicashApi?.getBaseUrl?.() || API_URL;
+  }
   applyPreferences();
   cargar();
   cargarMetas();
@@ -4843,10 +5944,14 @@ async function enviarAyuda() {
   }
 }
 
-async function logout() {
-  const confirmar = confirm(tx("logoutConfirm"));
-  if (!confirmar) return;
+async function logout(options = {}) {
+  const { skipConfirm = false } = options || {};
+  if (!skipConfirm) {
+    const confirmar = confirm(tx("logoutConfirm"));
+    if (!confirmar) return;
+  }
 
+  clearTimeout(inactivityTimerId);
   resetWalleConversationForUser();
 
   try {
@@ -4862,9 +5967,12 @@ async function logout() {
 }
 
 function mostrar(id) {
+  cerrarFabMenu();
   cerrarModalGenerico("modalWalleChat");
+  const pantalla = document.getElementById(id);
+  if (!pantalla) return;
   document.querySelectorAll(".pantalla").forEach((p) => p.classList.remove("activa"));
-  document.getElementById(id).classList.add("activa");
+  pantalla.classList.add("activa");
   document.querySelectorAll(".menu-item").forEach((item) => {
     item.classList.toggle("activo", item.dataset.target === id);
   });
@@ -4888,6 +5996,12 @@ function prepararGuiaUsuario() {
       posicionarGuiaUsuario();
     }
   });
+  window.addEventListener("scroll", () => {
+    if (onboardingState.active) {
+      actualizarMarcoGuia();
+      posicionarGuiaUsuario();
+    }
+  }, { passive: true });
 }
 
 function iniciarGuiaUsuario(forzar = false) {
@@ -5044,14 +6158,22 @@ function destacarElementoGuia(element) {
 
 function actualizarMarcoGuia(element = onboardingState.highlightedElement) {
   const highlight = document.getElementById("onboardingHighlight");
-  if (!highlight || !element) return;
+  if (!highlight) return;
+
+  if (!element) {
+    highlight.hidden = true;
+    highlight.style.width = "0px";
+    highlight.style.height = "0px";
+    return;
+  }
 
   const rect = element.getBoundingClientRect();
+  const padding = window.innerWidth <= 640 ? 6 : 8;
   highlight.hidden = false;
-  highlight.style.left = `${rect.left}px`;
-  highlight.style.top = `${rect.top}px`;
-  highlight.style.width = `${rect.width}px`;
-  highlight.style.height = `${rect.height}px`;
+  highlight.style.left = `${Math.max(6, rect.left - padding)}px`;
+  highlight.style.top = `${Math.max(6, rect.top - padding)}px`;
+  highlight.style.width = `${Math.min(window.innerWidth - 12, rect.width + (padding * 2))}px`;
+  highlight.style.height = `${Math.min(window.innerHeight - 12, rect.height + (padding * 2))}px`;
 }
 
 function limpiarResaltadoGuia() {
@@ -5078,9 +6200,21 @@ function posicionarGuiaUsuario(target = onboardingState.highlightedElement) {
   card.dataset.placement = "center";
   card.style.left = "";
   card.style.top = "";
+  card.style.bottom = "";
   card.style.setProperty("--arrow-left", "50%");
 
   const padding = 12;
+
+  if (window.innerWidth <= 640) {
+    card.style.left = "10px";
+    card.style.right = "10px";
+    card.style.top = "auto";
+    card.style.bottom = "calc(12px + env(safe-area-inset-bottom, 0px))";
+    card.dataset.placement = "center";
+    return;
+  }
+
+  card.style.right = "";
 
   if (!target) {
     const cardWidth = Math.min(340, window.innerWidth - (padding * 2));

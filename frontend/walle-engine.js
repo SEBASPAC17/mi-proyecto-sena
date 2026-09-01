@@ -31,12 +31,13 @@
   ];
 
   const GREETINGS = ["hola", "buenas", "hey", "holi", "que mas", "que tal", "buen dia", "buenas tardes"];
-  const CONTEXTUAL_TERMS = ["cuanto", "cuanto seria", "como asi", "y si", "entonces", "me conviene", "vale la pena", "eso", "que hago"];
-  const DEBT_WORDS = ["deuda", "deudas", "debo", "credito", "creditos", "prestamo", "prestamos", "tarjeta", "cuota", "cuotas", "mora"];
-  const CREDIT_WORDS = ["credito", "creditos", "prestamo", "prestamos", "me prestan", "me ofrecen", "financiar", "cuota", "cuotas"];
-  const GOAL_WORDS = ["meta", "viaje", "quiero ahorrar para", "quiero juntar", "quiero reunir"];
+  const CONTEXTUAL_TERMS = ["cuanto", "cuanto seria", "como asi", "y si", "entonces", "me conviene", "vale la pena", "eso", "que hago", "que hago ahora", "que recomiendas", "sigo", "continua", "explicame"];
+  const DEBT_WORDS = ["deuda", "deudas", "debo", "deber", "endeudado", "endeudada", "credito", "creditos", "prestamo", "prestamos", "tarjeta", "cuota", "cuotas", "mora", "atraso", "atrasado", "atrasada", "colgado", "cartera", "datacredito", "reportado", "banco", "gota a gota"];
+  const CREDIT_WORDS = ["credito", "creditos", "prestamo", "prestamos", "me prestan", "me ofrecen", "financiar", "financiacion", "cuota", "cuotas", "cupo", "libranza", "libre inversion"];
+  const GOAL_WORDS = ["meta", "viaje", "quiero ahorrar para", "quiero juntar", "quiero reunir", "quiero comprar", "quiero lograr"];
   const INVESTMENT_WORDS = [
     "invertir",
+    "invierto",
     "inversion",
     "inversiones",
     "invertido",
@@ -51,15 +52,72 @@
     "cuenta rentada",
     "bajo riesgo"
   ];
-  const SNAPSHOT_WORDS = ["mis gastos", "mis ingresos", "mis finanzas", "analiza mis finanzas", "revisa mis gastos", "revisa mis finanzas", "en que gasto mas"];
+  const SNAPSHOT_WORDS = ["mis gastos", "mis ingresos", "mis finanzas", "analiza mis finanzas", "revisa mis gastos", "revisa mis finanzas", "en que gasto mas", "como voy", "que tal voy", "salud financiera", "mi perfil financiero"];
+  const COLOMBIA_BANK_WORDS = ["bancolombia", "davivienda", "banco de bogota", "bbva", "scotiabank", "colpatria", "av villas", "banco caja social", "banco agrario", "occidente", "popular", "itau", "nequi", "daviplata", "lulo", "nu", "rappi", "pibank", "banco w", "mibanco", "cooperativa", "fintech"];
+  const COLOMBIA_PROCEDURE_WORDS = ["tramite", "tramites", "colombia", "dian", "rut", "sisben", "camara de comercio", "certificado bancario", "extracto", "vida crediticia", "historial crediticio", "datacredito", "transunion", "centrales de riesgo", "paz y salvo", "superfinanciera", "superintendencia financiera", "defensor del consumidor financiero", "pqr", "pqrs", "derecho de peticion"];
+
+  const TERM_REPLACEMENTS = {
+    q: "que",
+    k: "que",
+    ke: "que",
+    xq: "porque",
+    pq: "porque",
+    pa: "para",
+    toy: "estoy",
+    tngo: "tengo",
+    meto: "meto",
+    saldria: "saldria",
+    nesecito: "necesito",
+    nececito: "necesito",
+    nesesito: "necesito",
+    prefunta: "pregunta",
+    prefunatar: "preguntar",
+    pregunatr: "preguntar",
+    ahoro: "ahorro",
+    ahorra: "ahorrar",
+    aorrar: "ahorrar",
+    ahorrarrr: "ahorrar",
+    haorrar: "ahorrar",
+    gatsos: "gastos",
+    gastoz: "gastos",
+    gatso: "gasto",
+    gastandoo: "gastando",
+    deudad: "deuda",
+    deudaz: "deudas",
+    deduas: "deudas",
+    deudaas: "deudas",
+    targeta: "tarjeta",
+    targta: "tarjeta",
+    tarjet: "tarjeta",
+    trajeta: "tarjeta",
+    creditoo: "credito",
+    credio: "credito",
+    cretido: "credito",
+    prestamoo: "prestamo",
+    prestmao: "prestamo",
+    interes: "interes",
+    interez: "interes",
+    ingrsos: "ingresos",
+    ingesos: "ingresos",
+    ingresoos: "ingresos",
+    suledo: "sueldo",
+    salrio: "salario",
+    presupeusto: "presupuesto",
+    presuspuesto: "presupuesto",
+    organziar: "organizar",
+    organisar: "organizar",
+    invercion: "inversion",
+    invercioness: "inversiones"
+  };
 
   const KEYWORD_GROUPS = {
-    ahorro: ["ahorro", "ahorrar", "guardar", "guardado", "fondo", "colchon"],
+    ahorro: ["ahorro", "ahorrar", "guardar", "guardado", "fondo", "colchon", "juntar", "reunir", "alcancia", "reserva", "separar plata", "plata aparte", "economizar", "guardar plata", "ahorro automatico"],
     deuda: DEBT_WORDS,
-    gasto: ["gasto", "gastos", "compras", "se me va", "no me alcanza", "fuga", "fugas"],
+    gasto: ["gasto", "gastos", "compras", "se me va", "no me alcanza", "fuga", "fugas", "no me rinde", "la plata no rinde", "se acaba la plata", "me quedo sin plata", "llego raspando", "apretado", "recortar", "bajar gastos", "gastar menos", "derrocho", "despilfarro", "compras impulsivas"],
     credito: CREDIT_WORDS,
+    tarjeta: ["tarjeta", "tarjeta credito", "tarjeta de credito", "cupo", "avance", "fecha de corte", "fecha limite", "pago minimo", "cuota de manejo", "extracto"],
     inversion: INVESTMENT_WORDS,
-    ingreso: ["gano", "ganar", "ingreso", "ingresos", "salario", "sueldo", "me pagan"],
+    ingreso: ["gano", "ganar", "ingreso", "ingresos", "salario", "sueldo", "me pagan", "me entra", "entrada", "nomina", "quincena", "pago", "ganar mas", "ingreso extra", "plata extra", "camello", "trabajo", "vender", "negocio"],
     tasa: ["tasa", "tasas", "interes", "intereses", "%"],
     unificacion: ["unificar", "unir", "consolidar", "refinanciar"],
     comida: ["comida", "mercado", "almuerzo", "desayuno", "cena", "restaurante", "domicilio", "cafecito", "cafe"],
@@ -68,8 +126,32 @@
     vivienda: ["arriendo", "hipoteca", "vivienda", "casa"],
     servicios: ["servicios", "luz", "agua", "internet", "celular"],
     compras: ["compras", "ropa", "shopping", "impulso"],
-    analisis: ["analiza", "analisis", "analizar", "revisa", "revisa mis finanzas"]
+    analisis: ["analiza", "analisis", "analizar", "revisa", "revisa mis finanzas", "diagnostico", "salud financiera", "como voy"],
+    organizacion: ["presupuesto", "organizar", "ordenar", "plan mensual", "manejar mi plata", "administrar", "distribuir", "repartir", "regla 50 30 20", "habitos financieros", "control financiero"],
+    bancos_colombia: COLOMBIA_BANK_WORDS,
+    tramites_colombia: COLOMBIA_PROCEDURE_WORDS
   };
+
+  const FINANCIAL_VOCABULARY = Array.from(new Set([
+    ...Object.values(KEYWORD_GROUPS).flat(),
+    "ahorro",
+    "ahorrar",
+    "gastos",
+    "deudas",
+    "tarjeta",
+    "credito",
+    "prestamo",
+    "ingresos",
+    "presupuesto",
+    "finanzas",
+    "invertir",
+    "inversion"
+  ]
+    .map((term) => String(term).split(/\s+/))
+    .flat()
+    .map((term) => term.trim())
+    .filter((term) => term.length >= 4)
+  ));
 
   const EXPENSE_CATEGORY_HINTS = {
     comida: ["comida", "mercado", "almuerzo", "desayuno", "cena", "restaurante", "domicilio", "cafecito", "cafe"],
@@ -96,6 +178,7 @@
       ultimoTema: null,
       palabrasClave: [],
       ultimaPregunta: "",
+      pais: "Colombia",
       inversion: {
         product: null,
         amount: null,
@@ -115,6 +198,7 @@
       tasas: Array.isArray(input.tasas) ? input.tasas.slice(-12) : [],
       palabrasClave: Array.isArray(input.palabrasClave) ? input.palabrasClave.slice(-20) : [],
       ultimaPregunta: input.ultimaPregunta || "",
+      pais: input.pais || base.pais,
       inversion: {
         ...(base.inversion || {}),
         ...((input && input.inversion) || {})
@@ -123,13 +207,14 @@
   }
 
   function normalizarTexto(texto) {
-    return String(texto || "")
+    const base = String(texto || "")
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^\w\s%]/g, " ")
       .replace(/\s+/g, " ")
       .trim();
+    return correctFinancialText(base);
   }
 
   function tokenizar(texto) {
@@ -137,7 +222,91 @@
   }
 
   function tieneAlguno(normalized, terms) {
-    return terms.some((term) => normalized.includes(normalizarTexto(term)));
+    return terms.some((term) => containsFinancialTerm(normalized, term));
+  }
+
+  function collapseRepeatedLetters(token) {
+    return String(token || "").replace(/([a-z])\1{2,}/g, "$1$1");
+  }
+
+  function editDistance(a, b) {
+    const left = String(a || "");
+    const right = String(b || "");
+    if (left === right) return 0;
+    if (!left.length) return right.length;
+    if (!right.length) return left.length;
+
+    const previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+    const current = Array(right.length + 1).fill(0);
+
+    for (let i = 1; i <= left.length; i += 1) {
+      current[0] = i;
+      for (let j = 1; j <= right.length; j += 1) {
+        const substitutionCost = left[i - 1] === right[j - 1] ? 0 : 1;
+        current[j] = Math.min(
+          current[j - 1] + 1,
+          previous[j] + 1,
+          previous[j - 1] + substitutionCost
+        );
+      }
+      for (let j = 0; j <= right.length; j += 1) {
+        previous[j] = current[j];
+      }
+    }
+
+    return previous[right.length];
+  }
+
+  function correctFinancialToken(rawToken) {
+    const token = collapseRepeatedLetters(rawToken);
+    if (!token || /^\d+$/.test(token) || token.includes("%")) return token;
+    if (TERM_REPLACEMENTS[token]) return TERM_REPLACEMENTS[token];
+    if (token.length < 4) return token;
+
+    let bestTerm = "";
+    let bestDistance = Infinity;
+    FINANCIAL_VOCABULARY.forEach((term) => {
+      if (!term || Math.abs(term.length - token.length) > 2) return;
+      if (term[0] !== token[0]) return;
+      const distance = editDistance(token, term);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestTerm = term;
+      }
+    });
+
+    const maxDistance = token.length >= 7 ? 2 : 1;
+    return bestDistance <= maxDistance ? bestTerm : token;
+  }
+
+  function correctFinancialText(normalized) {
+    return String(normalized || "")
+      .split(" ")
+      .map(correctFinancialToken)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function containsFinancialTerm(normalized, term) {
+    const cleanTerm = correctFinancialText(String(term || "").toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^\w\s%]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim());
+    if (!cleanTerm) return false;
+    if (normalized.includes(cleanTerm)) return true;
+
+    const textTokens = normalized.split(" ").filter(Boolean);
+    const termTokens = cleanTerm.split(" ").filter(Boolean);
+    if (termTokens.length !== 1) return false;
+    return textTokens.some((token) => (
+      token.length >= 4 &&
+      cleanTerm.length >= 4 &&
+      token[0] === cleanTerm[0] &&
+      editDistance(token, cleanTerm) <= (cleanTerm.length >= 7 ? 2 : 1)
+    ));
   }
 
   function uniqueBy(items, buildKey) {
@@ -454,8 +623,9 @@
     if (isGoalPlanRequest(normalizedText) && !tieneAlguno(normalizedText, KEYWORD_GROUPS.ingreso)) {
       return null;
     }
+    const hasExplicitIncome = /\b(gano|ganar|ingreso|ingresos|salario|sueldo|nomina|quincena)\b|me pagan|me entra/.test(normalizedText);
     if (tieneAlguno(normalizedText, KEYWORD_GROUPS.ingreso)) {
-      return montos[0].value;
+      return hasExplicitIncome ? montos[0].value : null;
     }
     if (montos.length === 1 && ["ahorro", "credito"].includes(context.ultimoTema || context.intent)) {
       return montos[0].value;
@@ -532,7 +702,12 @@
   }
 
   function isGoalPlanRequest(normalizedText) {
-    if (tieneAlguno(normalizedText, GOAL_WORDS)) {
+    const hasExactGoalWord = /\b(meta|viaje)\b/.test(normalizedText);
+    const hasGoalPhrase = GOAL_WORDS
+      .filter((term) => term.split(/\s+/).length > 1)
+      .some((term) => normalizedText.includes(normalizarTexto(term)));
+
+    if (hasExactGoalWord || hasGoalPhrase) {
       return true;
     }
 
@@ -575,12 +750,20 @@
       return "saludo";
     }
 
+    if (/(categoria|categorias|crear categoria|nueva categoria|organizar categorias)/.test(normalized)) {
+      return null;
+    }
+
     if (isGoalPlanRequest(normalized)) {
       return "meta";
     }
 
     if (isSnapshotRequest(normalized) || isInterestSimulationRequest(normalized)) {
       return "analisis";
+    }
+
+    if (isLiveRateQuestion(normalized)) {
+      return entities.investmentProduct ? "inversion" : "tasas";
     }
 
     if (entities.ingresoDetectado && montosSinOtroTema(normalized, entities, context)) {
@@ -592,30 +775,47 @@
       deudas: 0,
       unificacion: 0,
       credito: 0,
+      tarjeta: 0,
       inversion: 0,
       gastos: 0,
       ingresos: 0,
-      tasas: 0
+      tasas: 0,
+      organizacion: 0,
+      bancos_colombia: 0,
+      tramites_colombia: 0
     };
 
     Object.entries(KEYWORD_GROUPS).forEach(([group, terms]) => {
       terms.forEach((term) => {
-        if (!normalized.includes(normalizarTexto(term))) return;
+        if (!containsFinancialTerm(normalized, term)) return;
         if (group === "ahorro") scores.ahorro += 2;
         if (group === "deuda") scores.deudas += 2;
         if (group === "credito") scores.credito += 2;
+        if (group === "tarjeta") scores.tarjeta += 3;
         if (group === "inversion") scores.inversion += 2;
         if (group === "ingreso") scores.ingresos += 2;
         if (group === "tasa") scores.tasas += 2;
         if (["gasto", "comida", "ocio", "transporte", "vivienda", "servicios", "compras"].includes(group)) scores.gastos += 2;
         if (group === "unificacion") scores.unificacion += 4;
+        if (group === "organizacion") scores.organizacion += 3;
+        if (group === "bancos_colombia") scores.bancos_colombia += 4;
+        if (group === "tramites_colombia") scores.tramites_colombia += 4;
       });
     });
 
-    if (/cuanto ahorro|cuanto deberia ahorrar|debo ahorrar/.test(normalized)) scores.ahorro += 4;
+    if (/cuanto ahorro|cuanto deberia ahorrar|debo ahorrar|como empiezo a ahorrar|guardar plata/.test(normalized)) scores.ahorro += 4;
     if (entities.deudas.length) scores.deudas += 3;
     if (entities.tasas.length >= 2) scores.tasas += 3;
     if (entities.categoriasGasto.length) scores.gastos += 3;
+    if (/dinero no me rinde|plata no me rinde|se me acaba la plata|me quedo sin plata|llego raspando/.test(normalized)) scores.gastos += 5;
+    if (/como organizo|organizar mi plata|manejar mi plata|presupuesto|ordenar mis finanzas|controlar mi dinero/.test(normalized)) scores.organizacion += 5;
+    if (/tarjeta|pago minimo|fecha de corte|avance|cupo/.test(normalized)) scores.tarjeta += 4;
+    if (/(banco|bancos|entidad|entidades|nequi|daviplata|cuenta de ahorro|cuenta corriente|billetera)/.test(normalized)) scores.bancos_colombia += 4;
+    if (/(facil|facilidad|facilidades|preaprobado|me prestan|sacar credito|pedir credito|credito en colombia|prestamo en colombia)/.test(normalized)) scores.credito += 3;
+    if (/(tramite|requisito|requisitos|documentos|rut|dian|superfinanciera|defensor|pqr|pqrs|derecho de peticion|paz y salvo|datacredito|centrales)/.test(normalized)) scores.tramites_colombia += 4;
+    if (/(reclamo|queja|pqr|pqrs|derecho de peticion|defensor|superfinanciera)/.test(normalized)) scores.tramites_colombia += 3;
+    if (/(tasa de usura|usura|superfinanciera|tasa efectiva anual|e a|ea|mv|nominal|interes bancario corriente)/.test(normalized)) scores.tasas += 4;
+    if (/(hoy|actual|actuales|vigente|vigentes|en este momento).{0,35}(tasa|tasas|interes)|(?:tasa|tasas|interes).{0,35}(hoy|actual|actuales|vigente|vigentes)/.test(normalized)) scores.tasas += 6;
     if (entities.montoCredito && scores.credito > 0) scores.credito += 2;
     if (entities.investmentProduct) scores.inversion += 4;
     if (entities.montoInversion && (scores.inversion > 0 || context.ultimoTema === "inversion")) scores.inversion += 3;
@@ -624,6 +824,7 @@
     if (/(quiero|necesito|busco|me ofrecen).{0,20}(credito|prestamo)/.test(normalized)) scores.credito += 4;
     if (/(quiero|pienso|estoy pensando|me conviene|vale la pena).{0,28}(invertir|cdt|fiducuenta)/.test(normalized)) scores.inversion += 5;
     if ((normalized.includes("credito") || normalized.includes("prestamo")) && !normalized.includes("deuda")) scores.credito += 2;
+    if (normalized.includes("tarjeta") && normalized.includes("credito")) scores.tarjeta += 3;
     if (entities.montoCredito && entities.plazoMeses && entities.tasas.length) scores.credito += 4;
     if (scores.unificacion > 0 && (entities.tasas.length || context.tasas.length || entities.deudas.length || context.deudas.length)) scores.unificacion += 3;
     if (normalized.includes("no me alcanza")) scores.gastos += 2;
@@ -635,6 +836,10 @@
       .filter(([, score]) => score > 0)
       .sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 
+    if (best === "tramites_colombia") return "tramites_colombia";
+    if (best === "bancos_colombia") return "bancos_colombia";
+    if (best === "tarjeta") return "tarjeta";
+    if (best === "organizacion") return "organizacion";
     if (best) return best;
     if (isContextualFollowUp(normalized) && context.ultimoTema) return context.ultimoTema;
     if (context.ultimoTema === "inversion" && (entities.montoInversion || entities.plazoMeses || entities.tasas.length)) return "inversion";
@@ -799,6 +1004,17 @@
   }
 
   function buildDebtDecision(updatedContext) {
+    const normalizedQuestion = normalizarTexto(updatedContext.ultimaPregunta || "");
+    if (/datacredito|centrales|reportado|reportaron|mora|atrasado|atrasada/.test(normalizedQuestion)) {
+      return buildDecision(
+        "direct",
+        "deudas",
+        "Si ya hay mora, reporte o riesgo de reporte, lo primero es frenar que la deuda siga creciendo.",
+        "Pide saldo actualizado, tasa, dias de mora y opciones de acuerdo por escrito. Si puedes pagar, negocia paz y salvo o soporte del acuerdo; si no puedes, busca una cuota realista antes de prometer.",
+        "Despues de pagar o negociar, guarda comprobantes y revisa que la entidad actualice el estado en centrales."
+      );
+    }
+
     const ratedDebts = sortDebtsByPriority(updatedContext.deudas);
     if (ratedDebts.length >= 2) {
       const target = ratedDebts[0];
@@ -1099,10 +1315,11 @@
   function buildIncomeDecision(updatedContext) {
     if (!updatedContext.ingreso) {
       return buildDecision(
-        "question",
+        "direct",
         "ingresos",
-        "Cuanto ganas al mes mas o menos?",
-        "Con eso puedo ayudarte con ahorro, deuda o capacidad de pago."
+        "Si necesitas mas ingresos, combina dos frentes: ordenar lo que ya entra y crear una fuente pequeña adicional.",
+        "Empieza por algo que puedas vender o repetir esta semana: servicios, ventas, clases, domicilios, soporte digital o una habilidad que ya tengas. Evita ideas que pidan mucha inversion antes de validar si alguien paga.",
+        "Si me dices que sabes hacer, cuanto tiempo tienes y cuanto necesitas al mes, te propongo opciones mas concretas."
       );
     }
 
@@ -1115,6 +1332,64 @@
       {
         income: updatedContext.ingreso
       }
+    );
+  }
+
+  function buildOrganizationDecision(updatedContext) {
+    const incomeLine = updatedContext.ingreso
+      ? `Como tienes registrado un ingreso de ${formatCurrency(updatedContext.ingreso)}, podemos repartirlo con porcentajes reales.`
+      : "Sin tu ingreso exacto, te doy una estructura base para empezar.";
+
+    return buildDecision(
+      "direct",
+      "organizacion",
+      "Para organizar tu plata, usa una regla simple antes de gastar: primero obligaciones, luego ahorro, luego gustos.",
+      `${incomeLine} Una guia practica es: 50% necesidades, 20% ahorro/deudas y 30% vida diaria flexible. Si estas endeudado, mueve parte de ese 30% a pagar deuda.`,
+      "Empieza esta semana anotando tres grupos: fijos, variables y extras. Con eso Walle puede decirte donde ajustar primero."
+    );
+  }
+
+  function buildCardDecision(analysis, updatedContext) {
+    const normalized = analysis.entities.normalized;
+
+    if (/pago minimo|minimo/.test(normalized)) {
+      return buildDecision(
+        "direct",
+        "tarjeta",
+        "Pagar solo el minimo puede servir para no caer en mora, pero no deberia volverse costumbre.",
+        "La deuda baja muy lento porque buena parte del pago se va a intereses. Si puedes, paga mas del minimo y evita nuevas compras mientras bajas el saldo.",
+        "Una buena meta es pagar total antes de la fecha limite; si no se puede, define un abono fijo superior al minimo."
+      );
+    }
+
+    if (/avance/.test(normalized)) {
+      return buildDecision(
+        "direct",
+        "tarjeta",
+        "Un avance con tarjeta casi siempre es caro.",
+        "Suele empezar a cobrar intereses rapido y puede tener costos adicionales. Usalo solo para una urgencia real y con plan de pago corto.",
+        "Si necesitas efectivo, compara primero con un credito mas barato o con renegociar el gasto."
+      );
+    }
+
+    if (/fecha de corte|fecha limite|cuando pagar|corte/.test(normalized)) {
+      return buildDecision(
+        "direct",
+        "tarjeta",
+        "La fecha clave para no pagar intereses es la fecha limite de pago.",
+        "La fecha de corte cierra el periodo facturado; despues llega el extracto. Lo ideal es pagar el total antes de la fecha limite.",
+        "Si puedes, programa el pago unos dias antes para evitar mora por olvidos o demoras."
+      );
+    }
+
+    return buildDecision(
+      "direct",
+      "tarjeta",
+      "La tarjeta de credito sirve si la tratas como medio de pago, no como ingreso extra.",
+      "Usala para compras que ya puedes pagar, revisa fecha de corte, fecha limite, tasa y evita financiar gastos del dia a dia.",
+      updatedContext.deudas.length
+        ? "Como ya hay señales de deuda en la conversacion, prioriza pagar saldos caros antes de aumentar cupo o hacer avances."
+        : "Si quieres, dime saldo, tasa y cuota minima y te ayudo a armar un plan de pago."
     );
   }
 
@@ -1258,23 +1533,141 @@
     );
   }
 
+  function buildColombiaRatesDecision(analysis) {
+    const normalized = analysis.entities.normalized;
+
+    if (isLiveRateQuestion(normalized) || /(hoy|actual|vigente|en este momento|cuanto esta)/.test(normalized)) {
+      return buildDecision(
+        "direct",
+        "tasas_colombia",
+        "No tengo tasas bancarias en vivo ni puedo consultar la Superfinanciera desde aqui.",
+        "Si me pasas la tasa que te ofrece un banco, cooperativa o billetera, la convierto y la comparo. En Colombia conviene mirar tasa efectiva anual, tasa mensual, seguros, cuota de manejo, plazo y costo total.",
+        "Para creditos, revisa tambien que la tasa no supere la tasa de usura vigente publicada por la Superfinanciera."
+      );
+    }
+
+    return buildDecision(
+      "direct",
+      "tasas_colombia",
+      "En Colombia no compares creditos solo por la cuota; compara la tasa efectiva anual y el costo total.",
+      "Una cuota baja puede esconder plazo largo, seguros o cargos adicionales. Para tarjetas, avances y libre inversion, la tasa suele ser mas alta que en credito de nomina, libranza o compra de cartera.",
+      "Pasame monto, tasa y plazo de cada opcion y te digo cual te cuesta menos."
+    );
+  }
+
+  function buildColombiaBankDecision(analysis) {
+    const normalized = analysis.entities.normalized;
+
+    if (/(nequi|daviplata|billetera|cuenta digital)/.test(normalized)) {
+      return buildDecision(
+        "direct",
+        "bancos_colombia",
+        "Nequi, Daviplata y otras billeteras digitales sirven muy bien para separar plata, recibir pagos pequenos y controlar gastos diarios.",
+        "Para ahorro serio, lo ideal es no mezclar la billetera de gasto con la cuenta donde guardas metas. Si el producto ofrece credito rapido, revisa tasa, plazo, cobros y si reporta a centrales.",
+        "Usalas como bolsillo operativo; para metas grandes, compara con cuenta de ahorro, cuenta remunerada o CDT segun liquidez."
+      );
+    }
+
+    if (/(bancolombia|davivienda|banco de bogota|bbva|scotiabank|colpatria|av villas|caja social|agrario|occidente|popular|itau)/.test(normalized)) {
+      return buildDecision(
+        "direct",
+        "bancos_colombia",
+        "Los bancos grandes en Colombia suelen tener mas red, mas productos y mejor integracion con nomina, pero no siempre la mejor tasa.",
+        "Bancolombia, Davivienda, Banco de Bogota, BBVA, Scotiabank Colpatria, AV Villas, Caja Social, Agrario, Occidente, Popular e Itau pueden servir para cuentas, tarjetas, libranza, libre inversion, vivienda o compra de cartera, segun tu perfil.",
+        "La decision practica: compara tasa, cuota de manejo, seguros, facilidad de pago, app, servicio y si ya recibes tu nomina alli."
+      );
+    }
+
+    return buildDecision(
+      "direct",
+      "bancos_colombia",
+      "Para elegir banco en Colombia, piensa primero en el uso: cuenta diaria, ahorro, credito, tarjeta, nomina o negocio.",
+      "Los bancos tradicionales dan respaldo y portafolio amplio; las billeteras y bancos digitales suelen ser mas simples para pagos y bolsillos; cooperativas y entidades especializadas pueden ser utiles para ciertos perfiles, pero toca revisar costos.",
+      "No hay un banco universalmente mejor: dime para que lo necesitas y te ayudo a filtrar opciones."
+    );
+  }
+
+  function buildColombiaProcedureDecision(analysis) {
+    const normalized = analysis.entities.normalized;
+
+    if (/(datacredito|transunion|centrales|reportado|vida crediticia|historial crediticio)/.test(normalized)) {
+      return buildDecision(
+        "direct",
+        "tramites_colombia",
+        "Para vida crediticia en Colombia, cuida pagos a tiempo, uso moderado de cupos y soportes de paz y salvo.",
+        "Si hay un reporte, pide detalle de la obligacion, fecha, saldo y estado. Al pagar o negociar, conserva comprobantes y revisa que la entidad actualice la informacion ante centrales.",
+        "Si ves informacion incorrecta, puedes reclamar primero ante la entidad y luego ante la central o la Superfinanciera, segun el caso."
+      );
+    }
+
+    if (/(pqr|pqrs|derecho de peticion|defensor|superfinanciera|reclamo|queja)/.test(normalized)) {
+      return buildDecision(
+        "direct",
+        "tramites_colombia",
+        "Si tienes un problema con un banco en Colombia, deja todo por escrito.",
+        "Empieza con PQR ante la entidad, guarda radicado y soportes. Si no resuelven, puedes escalar al Defensor del Consumidor Financiero de esa entidad o revisar canales de la Superfinanciera.",
+        "Incluye fechas, valores, producto, numero de radicado y que solucion concreta pides."
+      );
+    }
+
+    if (/(rut|dian|camara de comercio|independiente|negocio|emprendimiento)/.test(normalized)) {
+      return buildDecision(
+        "direct",
+        "tramites_colombia",
+        "Para creditos o productos como independiente en Colombia, normalmente te piden soportar ingresos mejor que a un asalariado.",
+        "Ayudan documentos como RUT, extractos bancarios, certificados de ingresos, contratos, declaraciones, camara de comercio si tienes negocio y buen movimiento en cuenta.",
+        "La clave es demostrar estabilidad: ingresos repetidos, bajo endeudamiento y cuentas ordenadas."
+      );
+    }
+
+    return buildDecision(
+      "direct",
+      "tramites_colombia",
+      "En tramites financieros colombianos, casi siempre te van a pedir identidad, soportes de ingresos, extractos, autorizacion para consultar centrales y datos de contacto.",
+      "Para creditos revisan capacidad de pago, historial, endeudamiento, estabilidad laboral o del negocio y comportamiento en centrales.",
+      "Dime el tramite exacto: credito, tarjeta, cuenta, reclamo, paz y salvo, RUT, DIAN o centrales, y te guio paso a paso."
+    );
+  }
+
+  function buildColombiaCreditAccessDecision(analysis, updatedContext) {
+    const normalized = analysis.entities.normalized;
+    const hasRate = analysis.entities.tasas.length || updatedContext.tasas.length;
+    const hasAmount = analysis.entities.montoCredito;
+
+    if (/(facil|facilidad|facilidades|donde me prestan|quien me presta|me prestan rapido|sacar credito)/.test(normalized)) {
+      return buildDecision(
+        "direct",
+        "credito_colombia",
+        "El credito mas facil no siempre es el mas conveniente.",
+        "En Colombia suelen aprobar mas facil cuando tienes nomina en el banco, buen historial, bajo endeudamiento, ingresos demostrables o un preaprobado. Las opciones rapidas o digitales pueden pedir menos pasos, pero revisa muy bien tasa, seguros, plazo y cobros.",
+        "Antes de aceptar, confirma cuota total, tasa efectiva anual, seguros, fecha de pago, posibilidad de prepago y si reporta a centrales.",
+        {
+          hasRate,
+          hasAmount
+        }
+      );
+    }
+
+    return buildCreditDecision(analysis, updatedContext);
+  }
+
   function buildGreetingDecision() {
     return buildDecision(
       "direct",
       "saludo",
       "Hola, soy Walle.",
-      "Si me dices tu ingreso, tus deudas, tus tasas o tus gastos, te respondo con calculo y contexto.",
-      "Por ejemplo: 'gano 4 millones' o 'tengo una deuda de 2 palos al 2% mensual'."
+      "Puedo ayudarte como asesor financiero local sobre ahorro, gastos, deudas, tarjetas, ingresos, creditos, bancos y tramites colombianos.",
+      "Toca un tema sugerido o escribe algo como: 'quiero sacar un credito', 'tengo deudas', 'que banco me conviene' o 'como reclamo a un banco en Colombia'."
     );
   }
 
   function buildUnknownDecision() {
     return buildDecision(
-      "question",
+      "direct",
       "desconocido",
-      "No me alcanza con eso para darte una recomendacion seria.",
-      "Puedo ayudarte con ahorro, gastos, deudas, unificacion o creditos usando tus numeros.",
-      "Prueba con algo como: 'gano 4 millones', 'gasto mucho en comida' o 'tengo dos tasas de 2% y 1.5%'."
+      "Puedo ayudarte como asistente financiero, aunque no hayas escrito una pregunta perfecta.",
+      "Trabajo mejor con temas como ahorro, gastos, deudas, tarjetas, ingresos, presupuesto e inversiones. Tambien entiendo si escribes con errores o de forma casual.",
+      "Cuéntame qué te preocupa: 'no me rinde la plata', 'tengo deudas', 'quiero ahorrar', 'uso tarjeta' o 'necesito ganar mas'."
     );
   }
 
@@ -1298,13 +1691,23 @@
       case "unificacion":
         return buildUnificationDecision(analysis, updatedContext, previousContext);
       case "credito":
-        return buildCreditDecision(analysis, updatedContext);
+        return buildColombiaCreditAccessDecision(analysis, updatedContext);
+      case "tarjeta":
+        return buildCardDecision(analysis, updatedContext);
       case "inversion":
         return buildInvestmentDecision(analysis, updatedContext);
       case "gastos":
         return buildExpenseDecision(analysis, updatedContext);
+      case "organizacion":
+        return buildOrganizationDecision(updatedContext);
       case "tasas":
-        return buildRateComparisonDecision(updatedContext.tasas.length ? updatedContext.tasas : analysis.entities.tasas);
+        return (updatedContext.tasas.length >= 2 || analysis.entities.tasas.length >= 2)
+          ? buildRateComparisonDecision(updatedContext.tasas.length ? updatedContext.tasas : analysis.entities.tasas)
+          : buildColombiaRatesDecision(analysis);
+      case "bancos_colombia":
+        return buildColombiaBankDecision(analysis);
+      case "tramites_colombia":
+        return buildColombiaProcedureDecision(analysis);
       default:
         return buildUnknownDecision();
     }
@@ -1322,14 +1725,13 @@
     const updatedContext = updateContext(previousContext, analysis);
 
     if (!intent) {
-      const decision = buildUnknownDecision();
       return {
         intent: null,
         entities,
         context: updatedContext,
-        decision,
-        response: renderDecision(decision),
-        passToLegacy: false
+        decision: null,
+        response: "",
+        passToLegacy: true
       };
     }
 

@@ -14,6 +14,7 @@ function registerUserRoutes(app, deps) {
     normalizeEmail,
     PIN_VALIDATION_MESSAGE,
     revokeAllSessionsForUser,
+    revokeBiometricTokensForUser,
     revokeTokens,
     sanitizeText,
     sendEmailChangeConfirmation,
@@ -100,6 +101,40 @@ function registerUserRoutes(app, deps) {
     }
   });
 
+  app.put("/usuarios/:idUsuario/consentimiento-datos", requireAuth, async (req, res) => {
+    try {
+      if (!assertOwnUserId(req, res)) return;
+
+      const acepta = req.body?.acepta === true;
+      if (!acepta) {
+        return res.status(400).json({ ok: false, mensaje: "Debes autorizar el uso de datos para continuar" });
+      }
+
+      await pool.query(
+        "UPDATE usuarios SET datos_autorizados=1, datos_autorizados_en=COALESCE(datos_autorizados_en, NOW()) WHERE id_usuario=?",
+        [req.auth.userId]
+      );
+      await logAuditEvent({
+        idUsuario: req.auth.userId,
+        entidad: "usuarios",
+        entidadId: req.auth.userId,
+        accion: "autorizar_uso_datos",
+        detalle: { version: "2026-05", origen: "dashboard" }
+      });
+
+      return res.json({
+        ok: true,
+        mensaje: "Autorizacion registrada correctamente",
+        usuario: {
+          ...req.usuario,
+          datos_autorizados: true
+        }
+      });
+    } catch (error) {
+      return enviarError(res, error, "No se pudo registrar la autorizacion");
+    }
+  });
+
   app.put("/usuarios/:idUsuario/password", requireAuth, async (req, res) => {
     try {
       if (!assertOwnUserId(req, res)) return;
@@ -131,6 +166,7 @@ function registerUserRoutes(app, deps) {
       await pool.query("UPDATE usuarios SET password=? WHERE id_usuario=?", [passwordHash, req.auth.userId]);
       await revokeTokens(req.auth.userId, "password_reset");
       await revokeAllSessionsForUser(req.auth.userId);
+      await revokeBiometricTokensForUser(req.auth.userId);
 
       const replacementToken = await createSession(req.auth.userId, req);
       setSessionCookie(res, replacementToken);

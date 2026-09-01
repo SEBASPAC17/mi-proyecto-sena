@@ -13,9 +13,24 @@ const {
   getMonthRange,
   getPreviousMonth
 } = require("../utils/reporting");
+const {
+  DEFAULT_CATEGORIES,
+  DEFAULT_ICON,
+  META_ICON
+} = require("../config/appConfig");
 const WalleEngine = require("../../frontend/walle-engine.js");
 
 const tests = [
+  {
+    name: "appConfig conserva iconos reales para categorias por defecto",
+    run() {
+      assert.equal(DEFAULT_ICON, "\u{1F4E6}");
+      assert.equal(META_ICON, "\u{1F3AF}");
+      assert.equal(DEFAULT_CATEGORIES.find((item) => item.nombre === "Ahorro").icono, "\u{1F4B0}");
+      assert.equal(DEFAULT_CATEGORIES.find((item) => item.nombre === "Vivienda").icono, "\u{1F3E0}");
+      assert.equal(DEFAULT_CATEGORIES.some((item) => /^\?+$/.test(item.icono)), false);
+    }
+  },
   {
     name: "normalizeEmail limpia espacios y normaliza a minusculas",
     run() {
@@ -223,6 +238,56 @@ const tests = [
       assert.equal(inversion.intent, "inversion");
       assert.ok(inversion.response.toLowerCase().includes("deuda"));
       assert.ok(inversion.response.toLowerCase().includes("no saldria mejor"));
+    }
+  },
+  {
+    name: "Walle orienta sobre bancos colombianos sin depender de APIs",
+    run() {
+      const bancos = WalleEngine.processMessage("que banco me conviene en Colombia para ahorrar?");
+
+      assert.equal(bancos.intent, "bancos_colombia");
+      assert.ok(bancos.response.toLowerCase().includes("colombia"));
+      assert.ok(bancos.response.toLowerCase().includes("cuenta"));
+    }
+  },
+  {
+    name: "Walle aclara tasas colombianas sin datos en vivo",
+    run() {
+      const tasas = WalleEngine.processMessage("cuales son las tasas de credito actuales hoy en Colombia?");
+
+      assert.equal(tasas.intent, "tasas");
+      assert.ok(tasas.response.toLowerCase().includes("no tengo tasas"));
+      assert.ok(tasas.response.toLowerCase().includes("superfinanciera"));
+    }
+  },
+  {
+    name: "Walle guia reclamos financieros en Colombia",
+    run() {
+      const reclamo = WalleEngine.processMessage("como hago una PQR contra un banco?");
+
+      assert.equal(reclamo.intent, "tramites_colombia");
+      assert.ok(reclamo.response.toLowerCase().includes("pqr"));
+      assert.ok(reclamo.response.toLowerCase().includes("defensor"));
+    }
+  },
+  {
+    name: "Walle advierte sobre creditos faciles en Colombia",
+    run() {
+      const credito = WalleEngine.processMessage("donde puedo sacar credito facil en Colombia?");
+
+      assert.equal(credito.intent, "credito");
+      assert.ok(credito.response.toLowerCase().includes("facil"));
+      assert.ok(credito.response.toLowerCase().includes("tasa"));
+    }
+  },
+  {
+    name: "Walle deja pasar preguntas desconocidas al asistente legado",
+    run() {
+      const result = WalleEngine.processMessage("como creo una categoria nueva");
+
+      assert.equal(result.intent, null);
+      assert.equal(result.passToLegacy, true);
+      assert.equal(result.response, "");
     }
   }
 ];

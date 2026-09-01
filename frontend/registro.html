@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Registro - Dinamicash Wallet</title>
   <link rel="stylesheet" href="estilos.css">
 </head>
@@ -21,6 +22,7 @@
         <input id="correo" type="email" placeholder="Correo" required>
         <input id="password" type="password" inputmode="numeric" maxlength="4" pattern="\d{4}" placeholder="PIN de 4 digitos" required>
         <button type="submit">Registrarse</button>
+        <button type="button" class="secondary-btn" id="btnVolverLogin" onclick="window.location.href='login.html'">Volver a iniciar sesión</button>
       </form>
     </div>
   </div>
@@ -39,6 +41,7 @@
       document.getElementById("correo").placeholder = i18n.t("email");
       document.getElementById("password").placeholder = i18n.t("password");
       document.querySelector("#registroForm button").textContent = i18n.t("registerButton");
+      document.getElementById("btnVolverLogin").textContent = i18n.t("loginHeading") || "Volver a iniciar sesión";
     }
 
     document.getElementById("registroForm").addEventListener("submit", async (e) => {

@@ -1,5 +1,6 @@
 const path = require("path");
 const crypto = require("crypto");
+const fs = require("fs");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const express = require("express");
@@ -14,6 +15,24 @@ const registerMovementRoutes = require("./routes/registerMovementRoutes");
 const registerReportRoutes = require("./routes/registerReportRoutes");
 const registerGoalRoutes = require("./routes/registerGoalRoutes");
 const registerSupportRoutes = require("./routes/registerSupportRoutes");
+const {
+  DEFAULT_CATEGORIES,
+  DEFAULT_ICON,
+  FRONTEND_URL,
+  LOGIN_BLOCK_MINUTES,
+  LOGIN_MAX_ATTEMPTS,
+  LOGIN_WINDOW_MS,
+  MAX_TEXT_LENGTH,
+  META_ICON,
+  PIN_REGEX,
+  PIN_VALIDATION_MESSAGE,
+  SECURE_COOKIES,
+  SESSION_COOKIE_NAME,
+  SESSION_TTL_DAYS,
+  SESSION_TTL_MS,
+  SUPPORT_EMAIL,
+  TOKEN_TTL_HOURS
+} = require("./config/appConfig");
 
 let nodemailer = null;
 try {
@@ -24,38 +43,7 @@ try {
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
-const META_ICON = "??";
-const DEFAULT_ICON = "??";
-const PIN_REGEX = /^\d{4}$/;
-const PIN_VALIDATION_MESSAGE = "La clave debe ser un PIN numerico de 4 digitos";
-const FRONTEND_URL = (process.env.FRONTEND_URL || "http://localhost:5500/frontend").replace(/\/+$/, "");
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || process.env.EMAIL_FROM || process.env.EMAIL_USER || "soporte@dinamicash.local";
-const TOKEN_TTL_HOURS = { verify_email: 24, password_reset: 1, email_change: 24 };
-const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || "dinamicash_session";
-const SESSION_TTL_DAYS = Math.max(1, Number(process.env.SESSION_TTL_DAYS || 7));
-const SESSION_TTL_MS = SESSION_TTL_DAYS * 24 * 60 * 60 * 1000;
-const SECURE_COOKIES = String(process.env.SECURE_COOKIES || process.env.NODE_ENV === "production").toLowerCase() === "true";
-const LOGIN_MAX_ATTEMPTS = Math.max(3, Number(process.env.LOGIN_MAX_ATTEMPTS || 5));
-const LOGIN_BLOCK_MINUTES = Math.max(1, Number(process.env.LOGIN_BLOCK_MINUTES || 15));
-const LOGIN_WINDOW_MS = LOGIN_BLOCK_MINUTES * 60 * 1000;
-const MAX_TEXT_LENGTH = 255;
-const DEFAULT_CATEGORIES = [
-  { nombre: "Vivienda", icono: "??" },
-  { nombre: "Alimentacion", icono: "???" },
-  { nombre: "Transporte", icono: "??" },
-  { nombre: "Servicios", icono: "??" },
-  { nombre: "Salud", icono: "??" },
-  { nombre: "Educacion", icono: "??" },
-  { nombre: "Entretenimiento", icono: "??" },
-  { nombre: "Compras", icono: "???" },
-  { nombre: "Deudas", icono: "??" },
-  { nombre: "Ahorro", icono: "??" },
-  { nombre: "Regalos", icono: "??" },
-  { nombre: "Viajes", icono: "??" },
-  { nombre: "Mascotas", icono: "??" },
-  { nombre: "Ropa", icono: "??" },
-  { nombre: "Otros", icono: "??" }
-];
+const SESSION_COOKIE_SAMESITE = process.env.SESSION_COOKIE_SAMESITE || (SECURE_COOKIES ? "None" : "Lax");
 
 const loginAttempts = new Map();
 
@@ -72,6 +60,7 @@ function safeUrlOrigin(url) {
 }
 
 const isProduction = String(process.env.NODE_ENV || "").toLowerCase() === "production";
+const allowTunnelOrigins = String(process.env.ALLOW_TUNNEL_ORIGINS || "").toLowerCase() === "true";
 const allowedOrigins = new Set(
   [
     safeUrlOrigin(FRONTEND_URL),
@@ -83,6 +72,9 @@ if (!isProduction) {
   [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://localhost",
+    "capacitor://localhost",
+    "ionic://localhost",
     "http://localhost:5500",
     "http://127.0.0.1:5500",
     "http://localhost:5501",
@@ -93,7 +85,8 @@ if (!isProduction) {
 
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.size === 0 || allowedOrigins.has(origin)) {
+    const isTryCloudflareOrigin = allowTunnelOrigins && /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/i.test(origin || "");
+    if (!origin || allowedOrigins.size === 0 || allowedOrigins.has(origin) || isTryCloudflareOrigin) {
       callback(null, true);
       return;
     }
@@ -111,6 +104,22 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: "20kb" }));
 app.use("/frontend", express.static(path.join(__dirname, "..", "frontend")));
+
+app.get("/dinamicash.apk", (req, res) => {
+  const apkPath = path.join(__dirname, "..", "dinamicash.apk");
+  if (!fs.existsSync(apkPath)) {
+    res.status(404).json({ ok: false, mensaje: "APK no encontrado" });
+    return;
+  }
+
+  res.setHeader("Content-Type", "application/vnd.android.package-archive");
+  res.setHeader("Content-Disposition", "attachment; filename=\"dinamicash.apk\"");
+  res.sendFile(apkPath, (error) => {
+    if (error && !res.headersSent) {
+      res.status(500).json({ ok: false, mensaje: "No se pudo descargar el APK" });
+    }
+  });
+});
 
 function enviarError(res, error, mensaje = "Error interno del servidor") {
   console.error(error);
@@ -332,7 +341,7 @@ function serializeCookie(name, value, options = {}) {
 function setSessionCookie(res, token) {
   res.setHeader("Set-Cookie", serializeCookie(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
-    sameSite: "Lax",
+    sameSite: SESSION_COOKIE_SAMESITE,
     secure: SECURE_COOKIES,
     path: "/",
     maxAge: SESSION_TTL_DAYS * 24 * 60 * 60
@@ -342,7 +351,7 @@ function setSessionCookie(res, token) {
 function clearSessionCookie(res) {
   res.setHeader("Set-Cookie", serializeCookie(SESSION_COOKIE_NAME, "", {
     httpOnly: true,
-    sameSite: "Lax",
+    sameSite: SESSION_COOKIE_SAMESITE,
     secure: SECURE_COOKIES,
     path: "/",
     expires: new Date(0),
@@ -379,10 +388,48 @@ async function createSession(idUsuario, req) {
   return token;
 }
 
+async function createBiometricLoginToken(idUsuario, req) {
+  const token = createToken();
+  await pool.query(
+    `INSERT INTO biometric_tokens (id_usuario, token_hash, user_agent, ip_address, last_used_en)
+     VALUES (?,?,?,?,NULL)`,
+    [
+      idUsuario,
+      hashValue(token),
+      sanitizeText(req.headers["user-agent"] || "", 255),
+      sanitizeText(getClientIp(req), 64)
+    ]
+  );
+  return token;
+}
+
+async function findBiometricLoginToken(token, correo) {
+  if (!token || !correo) return null;
+  const [results] = await pool.query(
+    `SELECT bt.id, bt.id_usuario, u.nombre, u.correo, u.email_verificado,
+            u.datos_autorizados, u.datos_autorizados_en
+     FROM biometric_tokens bt
+     INNER JOIN usuarios u ON u.id_usuario = bt.id_usuario
+     WHERE bt.token_hash=? AND bt.revocado_en IS NULL AND u.correo=?
+     LIMIT 1`,
+    [hashValue(token), normalizeEmail(correo)]
+  );
+  return results[0] || null;
+}
+
+async function touchBiometricLoginToken(id) {
+  await pool.query("UPDATE biometric_tokens SET last_used_en=NOW() WHERE id=?", [id]);
+}
+
+async function revokeBiometricTokensForUser(idUsuario) {
+  await pool.query("UPDATE biometric_tokens SET revocado_en=NOW() WHERE id_usuario=? AND revocado_en IS NULL", [idUsuario]);
+}
+
 async function findSessionByToken(token) {
   if (!token) return null;
   const [results] = await pool.query(
-    `SELECT s.id, s.id_usuario, s.expires_en, u.nombre, u.correo, u.email_verificado
+    `SELECT s.id, s.id_usuario, s.expires_en, u.nombre, u.correo, u.email_verificado,
+            u.datos_autorizados, u.datos_autorizados_en
      FROM user_sessions s
      INNER JOIN usuarios u ON u.id_usuario = s.id_usuario
      WHERE s.token_hash=? AND s.revocado_en IS NULL AND s.expires_en >= NOW()
@@ -471,7 +518,9 @@ async function requireAuth(req, res, next) {
     req.usuario = {
       id_usuario: Number(session.id_usuario),
       nombre: session.nombre,
-      correo: session.correo
+      correo: session.correo,
+      datos_autorizados: Number(session.datos_autorizados) === 1,
+      datos_autorizados_en: session.datos_autorizados_en || null
     };
 
     await touchSession(session.id);
@@ -505,7 +554,9 @@ async function ensureUserEmailSchema() {
   const requiredColumns = [
     { name: "email_verificado", sql: "ALTER TABLE usuarios ADD COLUMN email_verificado TINYINT(1) NOT NULL DEFAULT 0" },
     { name: "email_verificado_en", sql: "ALTER TABLE usuarios ADD COLUMN email_verificado_en DATETIME NULL" },
-    { name: "correo_pendiente", sql: "ALTER TABLE usuarios ADD COLUMN correo_pendiente VARCHAR(255) NULL" }
+    { name: "correo_pendiente", sql: "ALTER TABLE usuarios ADD COLUMN correo_pendiente VARCHAR(255) NULL" },
+    { name: "datos_autorizados", sql: "ALTER TABLE usuarios ADD COLUMN datos_autorizados TINYINT(1) NOT NULL DEFAULT 0" },
+    { name: "datos_autorizados_en", sql: "ALTER TABLE usuarios ADD COLUMN datos_autorizados_en DATETIME NULL" }
   ];
   for (const column of requiredColumns) {
     const [exists] = await pool.query(`SHOW COLUMNS FROM usuarios LIKE '${column.name}'`);
@@ -548,6 +599,24 @@ async function ensureSessionSchema() {
       UNIQUE KEY uq_user_sessions_token_hash (token_hash),
       INDEX idx_user_sessions_user (id_usuario, revocado_en, expires_en),
       CONSTRAINT fk_user_sessions_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE CASCADE
+    )`
+  );
+}
+
+async function ensureBiometricTokenSchema() {
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS biometric_tokens (
+      id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      id_usuario INT NOT NULL,
+      token_hash CHAR(64) NOT NULL,
+      user_agent VARCHAR(255) NULL,
+      ip_address VARCHAR(64) NULL,
+      last_used_en DATETIME NULL,
+      revocado_en DATETIME NULL,
+      creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY uq_biometric_tokens_token_hash (token_hash),
+      INDEX idx_biometric_tokens_user (id_usuario, revocado_en),
+      CONSTRAINT fk_biometric_tokens_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE CASCADE
     )`
   );
 }
@@ -661,22 +730,6 @@ async function getReportTotals({ idUsuario, startDate, endDate, tipo = "todos", 
   return rows[0] || { ingresos: 0, gastos: 0, total_movimientos: 0 };
 }
 
-async function ensureDefaultCategoriesForUser(idUsuario) {
-  for (const categoria of DEFAULT_CATEGORIES) {
-    const [existente] = await pool.query(
-      "SELECT id,icono FROM categorias WHERE id_usuario=? AND nombre=? LIMIT 1",
-      [idUsuario, categoria.nombre]
-    );
-    if (existente.length === 0) {
-      await pool.query("INSERT INTO categorias (nombre,icono,id_usuario) VALUES (?,?,?)", [categoria.nombre, categoria.icono, idUsuario]);
-      continue;
-    }
-    if (!existente[0].icono) {
-      await pool.query("UPDATE categorias SET icono=? WHERE id=?", [categoria.icono, existente[0].id]);
-    }
-  }
-}
-
 async function ensureMetaCategory(idUsuario, nombre, icono = META_ICON) {
   const [categoriaExistente] = await pool.query(
     "SELECT id FROM categorias WHERE id_usuario=? AND nombre=? LIMIT 1",
@@ -689,6 +742,34 @@ async function ensureMetaCategory(idUsuario, nombre, icono = META_ICON) {
   await pool.query("UPDATE categorias SET icono=? WHERE id=?", [icono, categoriaExistente[0].id]);
 }
 
+function isMissingOrCorruptIcon(icono) {
+  const value = String(icono || "").trim();
+  return !value || /^\?+$/.test(value) || /Ã|Â|ð|Ÿ|ï|¸|â/.test(value);
+}
+
+async function ensureCategorySchema() {
+  const [iconColumn] = await pool.query("SHOW COLUMNS FROM categorias LIKE 'icono'");
+  if (iconColumn.length === 0) {
+    await pool.query(`ALTER TABLE categorias ADD COLUMN icono VARCHAR(10) NOT NULL DEFAULT ${pool.escape(DEFAULT_ICON)}`);
+  }
+}
+
+async function ensureDefaultCategoriesForUser(idUsuario) {
+  for (const categoria of DEFAULT_CATEGORIES) {
+    const [existente] = await pool.query(
+      "SELECT id,icono FROM categorias WHERE id_usuario=? AND nombre=? LIMIT 1",
+      [idUsuario, categoria.nombre]
+    );
+    if (existente.length === 0) {
+      await pool.query("INSERT INTO categorias (nombre,icono,id_usuario) VALUES (?,?,?)", [categoria.nombre, categoria.icono, idUsuario]);
+      continue;
+    }
+    if (isMissingOrCorruptIcon(existente[0].icono)) {
+      await pool.query("UPDATE categorias SET icono=? WHERE id=?", [categoria.icono, existente[0].id]);
+    }
+  }
+}
+
 const routeDeps = {
   app,
   assertOwnUserId,
@@ -698,12 +779,14 @@ const routeDeps = {
   clearLoginAttempts,
   clearSessionCookie,
   createEmailToken,
+  createBiometricLoginToken,
   createSession,
   DEFAULT_ICON,
   ensureDefaultCategoriesForUser,
   ensureMetaCategory,
   enviarError,
   findValidToken,
+  findBiometricLoginToken,
   getActiveLoginBlock,
   getMonthRange,
   getPreviousMonth,
@@ -721,6 +804,7 @@ const routeDeps = {
   registerFailedLogin,
   requireAuth,
   revokeAllSessionsForUser,
+  revokeBiometricTokensForUser,
   revokeSessionByToken,
   revokeTokens,
   sanitizeText,
@@ -730,6 +814,7 @@ const routeDeps = {
   sendPasswordResetEmail,
   sendVerificationEmail,
   setSessionCookie,
+  touchBiometricLoginToken,
   toMySqlDateTime
 };
 
@@ -749,6 +834,7 @@ async function startServer() {
     await ensureLifecycleSchema();
     await ensureEmailTokenSchema();
     await ensureSessionSchema();
+    await ensureBiometricTokenSchema();
     await ensureAuditSchema();
     app.listen(PORT, () => {
       console.log(`Servidor corriendo en puerto ${PORT}`);

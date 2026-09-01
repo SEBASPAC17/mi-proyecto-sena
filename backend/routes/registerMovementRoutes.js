@@ -64,7 +64,7 @@ function registerMovementRoutes(app, deps) {
 
       const [categoria] = await pool.query(
         "SELECT c.id,c.nombre,COALESCE(c.icono,?) AS icono FROM categorias c WHERE c.id=? AND c.id_usuario=? LIMIT 1",
-        [categoriaId, req.auth.userId]
+        [DEFAULT_ICON, categoriaId, req.auth.userId]
       );
       if (categoria.length === 0) {
         return res.status(400).json({ ok: false, mensaje: "La categoria no es valida" });

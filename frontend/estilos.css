@@ -14,11 +14,14 @@ body{
 
 /* LOGIN CENTRADO */
 .login-container{
-    height: 100vh;
+    min-height: 100vh;
+    min-height: 100svh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    padding: 18px 12px 58px;
+    box-sizing: border-box;
 }
 
 /* TARJETA */
@@ -26,7 +29,8 @@ body{
     background: var(--bg-secondary);
     padding: 25px;
     border-radius: 15px;
-    width: 280px;
+    width: min(280px, calc(100vw - 24px));
+    box-sizing: border-box;
     box-shadow: var(--shadow-soft);
 }
 
@@ -431,6 +435,37 @@ h1{
     font-weight:600;
 }
 
+.walle-chat-options-row{
+    align-items:flex-start;
+}
+
+.walle-chat-options{
+    max-width:min(82%, 360px);
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:8px;
+}
+
+.walle-chat-options button{
+    width:100%;
+    min-height:38px;
+    margin-top:0;
+    padding:0 11px;
+    border-radius:12px;
+    background:#0f172a;
+    color:#e2e8f0;
+    border:1px solid rgba(148,163,184,.35);
+    font-size:13px;
+    font-weight:900;
+    box-shadow:0 10px 18px rgba(2,6,23,.16);
+    white-space:nowrap;
+}
+
+.walle-chat-options button:hover{
+    background:#1e293b;
+    transform:translateY(-1px);
+}
+
 .walle-chat-form{
     display:flex;
     gap:10px;
@@ -509,6 +544,11 @@ h1{
         max-width:84%;
     }
 
+    .walle-chat-options{
+        max-width:84%;
+        grid-template-columns:1fr;
+    }
+
     .walle-chat-form{
         flex-direction:column;
         align-items:stretch;
@@ -548,6 +588,39 @@ body.modal-open{
     display:flex;
 }
 
+.modal-consent{
+    max-width:520px;
+}
+
+.modal-consent p{
+    color:var(--text-secondary);
+    line-height:1.5;
+    margin:0 0 12px;
+}
+
+.consent-check{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    margin:16px 0;
+    color:var(--text-primary);
+    font-size:14px;
+    font-weight:700;
+    line-height:1.4;
+}
+
+.consent-check input{
+    width:18px;
+    height:18px;
+    margin:2px 0 0;
+    flex:0 0 auto;
+    accent-color:var(--accent);
+}
+
+.consent-logout{
+    margin-top:10px;
+}
+
 /* CAMPOS DE ENTRADA */
 input, select {
     width: 100%;
@@ -571,6 +644,63 @@ input::placeholder {
 input:focus {
     border: 1px solid var(--accent);
     box-shadow: 0 0 5px var(--accent);
+}
+
+.remember-login{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:2px 0 10px;
+    color:var(--text-secondary);
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.remember-login input{
+    width:18px;
+    height:18px;
+    margin:0;
+    accent-color:var(--accent);
+    flex:0 0 auto;
+}
+
+.biometric-login{
+    margin-top:10px;
+    background:var(--bg-tertiary);
+    color:var(--text-primary);
+    border:1px solid var(--border-soft);
+}
+
+.biometric-login:hover{
+    background:var(--accent);
+    color:var(--text-dark);
+}
+
+.biometric-status{
+    min-height:18px;
+    margin:8px 0 0;
+    color:var(--text-secondary);
+    font-size:12px;
+    line-height:1.35;
+}
+
+.login-credit,
+.login-version{
+    position:fixed;
+    bottom:14px;
+    color:#94a3b8;
+    font-size:12px;
+    opacity:.9;
+    z-index:2;
+}
+
+.login-credit{
+    left:14px;
+}
+
+.login-version{
+    right:14px;
 }
 
 /* BOTON */
@@ -606,6 +736,79 @@ button:hover{
 
 .links p:hover{
     text-decoration: underline;
+}
+
+@media (max-width: 380px), (max-height: 560px){
+    .login-container{
+        justify-content:center;
+        padding:12px 12px 66px;
+        box-sizing:border-box;
+    }
+
+    .brand-title-login{
+        margin-bottom:14px;
+    }
+
+    .card{
+        padding:20px;
+    }
+
+    .login-credit,
+    .login-version{
+        position:fixed;
+        text-align:center;
+        margin:0;
+        line-height:1.25;
+    }
+
+    .login-credit{
+        left:12px;
+        right:12px;
+        bottom:30px;
+    }
+
+    .login-version{
+        right:12px;
+        bottom:10px;
+    }
+}
+
+.mobile-api-panel{
+    margin-top:18px;
+    border-top:1px solid var(--border-soft);
+    padding-top:14px;
+    color:var(--text-secondary);
+    font-size:13px;
+}
+
+.mobile-api-panel summary{
+    cursor:pointer;
+    color:var(--accent);
+    font-weight:800;
+    list-style-position:inside;
+}
+
+.mobile-api-panel label{
+    display:block;
+    margin-top:12px;
+    color:var(--text-primary);
+    font-weight:700;
+}
+
+.mobile-api-actions{
+    display:grid;
+    gap:8px;
+}
+
+.mobile-api-actions button{
+    width:100%;
+    margin-top:0;
+}
+
+.mobile-api-status{
+    margin:10px 0 0;
+    line-height:1.35;
+    overflow-wrap:anywhere;
 }
 
 /* =========================

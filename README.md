@@ -138,6 +138,23 @@ Archivo de pruebas:
 
 - [backend/tests/run-tests.js](/abs/path/C:/Users/Admin/OneDrive/Escritorio/dinamicash/backend/tests/run-tests.js:1)
 
+## APK Android con Capacitor
+
+El proyecto esta preparado para compilarse como APK Android usando Capacitor sin frameworks frontend. La configuracion vive en la raiz del repositorio y apunta a `frontend/` como carpeta web.
+
+Comandos principales:
+
+```bash
+npm install
+npx cap copy android
+npx cap sync android
+npx cap open android
+```
+
+Guia completa:
+
+- [docs/CAPACITOR-ANDROID.md](/abs/path/C:/Users/Admin/OneDrive/Escritorio/dinamicash/docs/CAPACITOR-ANDROID.md:1)
+
 ## Evidencias técnicas que fortalecen la sustentación
 
 - Validación de correo antes de permitir acceso.

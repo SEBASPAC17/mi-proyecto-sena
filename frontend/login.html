@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Login - Dinamicash Wallet</title>
   <link rel="stylesheet" href="estilos.css">
 </head>
@@ -21,21 +22,31 @@
       <form id="loginForm">
         <input type="email" id="correo" data-i18n-placeholder="email" placeholder="Correo" required>
         <input type="password" id="password" inputmode="numeric" maxlength="4" pattern="\d{4}" data-i18n-placeholder="password" placeholder="PIN de 4 digitos" required>
+        <label class="remember-login">
+          <input type="checkbox" id="recordarme">
+          <span>Recordar correo</span>
+        </label>
         <button type="submit" data-i18n="loginButton">Ingresar</button>
       </form>
+
+      <button type="button" id="biometricLoginBtn" class="secondary-btn biometric-login" hidden>
+        Ingresar con huella
+      </button>
+      <p id="biometricStatus" class="biometric-status"></p>
 
       <div class="links">
         <p onclick="irRegistro()" data-i18n="registerLink">Registrarse</p>
         <p onclick="olvido()" data-i18n="forgotPassword">Olvidaste tu PIN?</p>
       </div>
+
     </div>
   </div>
 
-  <div style="position:fixed;left:14px;bottom:10px;color:#94a3b8;font-size:12px;opacity:.9;">
+  <div class="login-credit">
     Hecho con amor por: Sebastian Andres Castañeda Panqueva
   </div>
-  <div style="position:fixed;right:14px;bottom:10px;color:#94a3b8;font-size:12px;opacity:.9;">
-    v1.5.0
+  <div class="login-version">
+    v1.6.0
   </div>
 
   <script src="i18n.js"></script>

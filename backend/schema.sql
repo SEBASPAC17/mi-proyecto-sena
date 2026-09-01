@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
   email_verificado TINYINT(1) NOT NULL DEFAULT 0,
   email_verificado_en DATETIME NULL,
   correo_pendiente VARCHAR(255) NULL,
+  datos_autorizados TINYINT(1) NOT NULL DEFAULT 0,
+  datos_autorizados_en DATETIME NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY uq_usuarios_correo (correo)
@@ -82,6 +84,20 @@ CREATE TABLE IF NOT EXISTS user_sessions (
   UNIQUE KEY uq_user_sessions_token_hash (token_hash),
   INDEX idx_user_sessions_user (id_usuario, revocado_en, expires_en),
   CONSTRAINT fk_user_sessions_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS biometric_tokens (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  id_usuario INT NOT NULL,
+  token_hash CHAR(64) NOT NULL,
+  user_agent VARCHAR(255) NULL,
+  ip_address VARCHAR(64) NULL,
+  last_used_en DATETIME NULL,
+  revocado_en DATETIME NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_biometric_tokens_token_hash (token_hash),
+  INDEX idx_biometric_tokens_user (id_usuario, revocado_en),
+  CONSTRAINT fk_biometric_tokens_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS audit_logs (
