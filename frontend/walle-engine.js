@@ -53,6 +53,8 @@
     "bajo riesgo"
   ];
   const SNAPSHOT_WORDS = ["mis gastos", "mis ingresos", "mis finanzas", "analiza mis finanzas", "revisa mis gastos", "revisa mis finanzas", "en que gasto mas", "como voy", "que tal voy", "salud financiera", "mi perfil financiero"];
+  const EMERGENCY_FUND_WORDS = ["fondo de emergencia", "fondo emergencia", "colchon de emergencia", "colchon financiero", "reserva de emergencia", "meses de emergencia"];
+  const DEBT_CAPACITY_WORDS = ["capacidad de endeudamiento", "capacidad de pago", "cuanto me puedo endeudar", "cuanto puedo endeudarme", "cuanto puedo pedir prestado", "cuanto credito puedo pedir", "cuota maxima", "cuota puedo pagar"];
   const COLOMBIA_BANK_WORDS = ["bancolombia", "davivienda", "banco de bogota", "bbva", "scotiabank", "colpatria", "av villas", "banco caja social", "banco agrario", "occidente", "popular", "itau", "nequi", "daviplata", "lulo", "nu", "rappi", "pibank", "banco w", "mibanco", "cooperativa", "fintech"];
   const COLOMBIA_PROCEDURE_WORDS = ["tramite", "tramites", "colombia", "dian", "rut", "sisben", "camara de comercio", "certificado bancario", "extracto", "vida crediticia", "historial crediticio", "datacredito", "transunion", "centrales de riesgo", "paz y salvo", "superfinanciera", "superintendencia financiera", "defensor del consumidor financiero", "pqr", "pqrs", "derecho de peticion"];
 
@@ -128,6 +130,8 @@
     compras: ["compras", "ropa", "shopping", "impulso"],
     analisis: ["analiza", "analisis", "analizar", "revisa", "revisa mis finanzas", "diagnostico", "salud financiera", "como voy"],
     organizacion: ["presupuesto", "organizar", "ordenar", "plan mensual", "manejar mi plata", "administrar", "distribuir", "repartir", "regla 50 30 20", "habitos financieros", "control financiero"],
+    fondo_emergencia: EMERGENCY_FUND_WORDS,
+    capacidad_pago: DEBT_CAPACITY_WORDS,
     bancos_colombia: COLOMBIA_BANK_WORDS,
     tramites_colombia: COLOMBIA_PROCEDURE_WORDS
   };
@@ -172,6 +176,7 @@
     return {
       intent: null,
       ingreso: null,
+      gastoEsencialMensual: null,
       gastos: [],
       deudas: [],
       tasas: [],
@@ -193,6 +198,7 @@
     return {
       ...base,
       ...(input || {}),
+      gastoEsencialMensual: Number(input.gastoEsencialMensual) || null,
       gastos: Array.isArray(input.gastos) ? input.gastos.slice(-12) : [],
       deudas: Array.isArray(input.deudas) ? input.deudas.slice(-12) : [],
       tasas: Array.isArray(input.tasas) ? input.tasas.slice(-12) : [],
@@ -642,6 +648,15 @@
     return null;
   }
 
+  function detectEssentialMonthlyExpense(texto, montos, ingresoDetectado) {
+    const rawText = String(texto || "");
+    const candidates = montos.filter((item) => item.value !== ingresoDetectado);
+    return candidates.find((item) => {
+      const nearby = normalizarTexto(rawText.slice(Math.max(0, item.index - 28), item.index + item.raw.length + 22));
+      return /\b(gasto|gastos|gasto esencial|gastos esenciales|necesidades|costos fijos|me gasto)\b/.test(nearby);
+    })?.value || null;
+  }
+
   function detectInvestmentProduct(normalizedText, context) {
     if (normalizedText.includes("cdt")) return "cdt";
     if (normalizedText.includes("cuenta remunerada") || normalizedText.includes("cuenta rentada")) return "cuenta_remunerada";
@@ -682,6 +697,7 @@
     const categoriasGasto = uniqueBy(gastos.map((item) => item.categoria), (value) => value);
     const ingresoDetectado = detectIncomeAmount(normalized, montos, context);
     const montoCredito = detectCreditAmount(normalized, montos, ingresoDetectado);
+    const gastoEsencialMensual = detectEssentialMonthlyExpense(texto, montos, ingresoDetectado);
     const investmentProduct = detectInvestmentProduct(normalized, context);
     const montoInversion = detectInvestmentAmount(normalized, montos, ingresoDetectado, context);
 
@@ -694,6 +710,7 @@
       categoriasGasto,
       palabrasClave,
       ingresoDetectado,
+      gastoEsencialMensual,
       montoCredito,
       montoInversion,
       investmentProduct,
@@ -758,6 +775,14 @@
       return "meta";
     }
 
+    if (tieneAlguno(normalized, EMERGENCY_FUND_WORDS)) {
+      return "fondo_emergencia";
+    }
+
+    if (tieneAlguno(normalized, DEBT_CAPACITY_WORDS)) {
+      return "capacidad_pago";
+    }
+
     if (isSnapshotRequest(normalized) || isInterestSimulationRequest(normalized)) {
       return "analisis";
     }
@@ -781,6 +806,8 @@
       ingresos: 0,
       tasas: 0,
       organizacion: 0,
+      fondo_emergencia: 0,
+      capacidad_pago: 0,
       bancos_colombia: 0,
       tramites_colombia: 0
     };
@@ -798,6 +825,8 @@
         if (["gasto", "comida", "ocio", "transporte", "vivienda", "servicios", "compras"].includes(group)) scores.gastos += 2;
         if (group === "unificacion") scores.unificacion += 4;
         if (group === "organizacion") scores.organizacion += 3;
+        if (group === "fondo_emergencia") scores.fondo_emergencia += 5;
+        if (group === "capacidad_pago") scores.capacidad_pago += 5;
         if (group === "bancos_colombia") scores.bancos_colombia += 4;
         if (group === "tramites_colombia") scores.tramites_colombia += 4;
       });
@@ -839,6 +868,8 @@
     if (best === "tramites_colombia") return "tramites_colombia";
     if (best === "bancos_colombia") return "bancos_colombia";
     if (best === "tarjeta") return "tarjeta";
+    if (best === "fondo_emergencia") return "fondo_emergencia";
+    if (best === "capacidad_pago") return "capacidad_pago";
     if (best === "organizacion") return "organizacion";
     if (best) return best;
     if (isContextualFollowUp(normalized) && context.ultimoTema) return context.ultimoTema;
@@ -880,6 +911,10 @@
 
     if (analysis.entities.ingresoDetectado) {
       next.ingreso = analysis.entities.ingresoDetectado;
+    }
+
+    if (analysis.entities.gastoEsencialMensual) {
+      next.gastoEsencialMensual = analysis.entities.gastoEsencialMensual;
     }
 
     next.tasas = mergeRates(next.tasas, analysis.entities.tasas).slice(-8);
@@ -1221,18 +1256,26 @@
     const cuota = calcularCuota(monto, tasaMensual, meses);
     const totalPagado = cuota * meses;
     const interesTotal = totalPagado - monto;
+    const paymentToIncome = updatedContext.ingreso ? cuota / updatedContext.ingreso : null;
+    const affordabilityLine = paymentToIncome === null
+      ? "Menor tasa siempre es mejor, pero bajar plazo tambien reduce bastante el costo total."
+      : paymentToIncome <= 0.30
+        ? `La cuota representa cerca del ${formatPercent(paymentToIncome * 100)} de tu ingreso; queda dentro del limite prudente de 30%, siempre que no tengas otras cuotas importantes.`
+        : `La cuota representa cerca del ${formatPercent(paymentToIncome * 100)} de tu ingreso y supera el limite prudente de 30%. Yo bajaria el monto o buscaria una tasa menor.`;
 
     return buildDecision(
       "direct",
       "credito",
       `Para ${formatCurrency(monto)} al ${formatPercent(rateEntry.percent)} ${formatPeriodLabel(rateEntry.period)} a ${meses} meses, la cuota seria aprox ${formatCurrency(cuota)}.`,
       `Ese credito terminaria costandote cerca de ${formatCurrency(interesTotal)} en intereses. La tasa equivale a aprox ${formatPercentFromDecimal(rateEntry.annualDecimal)} EA.`,
-      "Menor tasa siempre es mejor, pero bajar plazo tambien reduce bastante el costo total.",
+      affordabilityLine,
       {
         amount: monto,
         months: meses,
         payment: cuota,
         totalInterest: interesTotal,
+        paymentToIncome,
+        affordable: paymentToIncome === null ? null : paymentToIncome <= 0.30,
         rate: rateEntry
       }
     );
@@ -1339,13 +1382,77 @@
     const incomeLine = updatedContext.ingreso
       ? `Como tienes registrado un ingreso de ${formatCurrency(updatedContext.ingreso)}, podemos repartirlo con porcentajes reales.`
       : "Sin tu ingreso exacto, te doy una estructura base para empezar.";
+    const allocation = updatedContext.ingreso
+      ? {
+          needs: Math.round(updatedContext.ingreso * 0.50),
+          goals: Math.round(updatedContext.ingreso * 0.20),
+          flexible: Math.round(updatedContext.ingreso * 0.30)
+        }
+      : null;
+    const allocationLine = allocation
+      ? `Como punto de partida: hasta ${formatCurrency(allocation.needs)} para necesidades, ${formatCurrency(allocation.goals)} para ahorro o deudas y ${formatCurrency(allocation.flexible)} para gastos flexibles.`
+      : "Una guia practica es: 50% necesidades, 20% ahorro o deudas y 30% vida diaria flexible.";
 
     return buildDecision(
       "direct",
       "organizacion",
       "Para organizar tu plata, usa una regla simple antes de gastar: primero obligaciones, luego ahorro, luego gustos.",
-      `${incomeLine} Una guia practica es: 50% necesidades, 20% ahorro/deudas y 30% vida diaria flexible. Si estas endeudado, mueve parte de ese 30% a pagar deuda.`,
-      "Empieza esta semana anotando tres grupos: fijos, variables y extras. Con eso Walle puede decirte donde ajustar primero."
+      `${incomeLine} ${allocationLine} Si estas endeudado, mueve parte de lo flexible a pagar deuda.`,
+      "Empieza esta semana anotando tres grupos: fijos, variables y extras. Con eso Walle puede decirte donde ajustar primero.",
+      { allocation }
+    );
+  }
+
+  function buildEmergencyFundDecision(updatedContext) {
+    if (!updatedContext.ingreso) {
+      return buildDecision(
+        "question",
+        "fondo_emergencia",
+        "Cuanto ganas al mes y cuanto suman tus gastos esenciales?",
+        "Con esos datos calculo un fondo de 3 a 6 meses sin inflarlo con gastos opcionales."
+      );
+    }
+
+    const categorizedExpenses = updatedContext.gastos
+      .filter((expense) => Number.isFinite(expense.monto) && expense.monto > 0)
+      .reduce((sum, expense) => sum + expense.monto, 0);
+    const knownExpenses = updatedContext.gastoEsencialMensual || categorizedExpenses;
+    const essentialMonthly = knownExpenses || Math.round(updatedContext.ingreso * 0.60);
+    const minimumFund = essentialMonthly * 3;
+    const robustFund = essentialMonthly * 6;
+    const isEstimate = !knownExpenses;
+
+    return buildDecision(
+      "direct",
+      "fondo_emergencia",
+      `Tu fondo de emergencia deberia estar entre ${formatCurrency(minimumFund)} y ${formatCurrency(robustFund)}.`,
+      isEstimate
+        ? `Es una estimacion usando el 60% de tu ingreso de ${formatCurrency(updatedContext.ingreso)} como gasto esencial mensual. Con tus gastos reales puedo afinarla.`
+        : `Use ${formatCurrency(essentialMonthly)} de gastos mensuales registrados y cubri entre 3 y 6 meses.`,
+      "Empieza por completar un mes de gastos, mantenlo liquido y separado, y luego sube gradualmente hasta tres meses.",
+      { essentialMonthly, minimumFund, robustFund, isEstimate }
+    );
+  }
+
+  function buildDebtCapacityDecision(updatedContext) {
+    if (!updatedContext.ingreso) {
+      return buildDecision(
+        "question",
+        "capacidad_pago",
+        "Cuanto recibes al mes y cuanto pagas hoy en otras cuotas?",
+        "Como referencia prudente, todas tus cuotas juntas no deberian pasar del 30% de tu ingreso."
+      );
+    }
+
+    const maximumTotalPayment = Math.round(updatedContext.ingreso * 0.30);
+    const comfortablePayment = Math.round(updatedContext.ingreso * 0.20);
+    return buildDecision(
+      "direct",
+      "capacidad_pago",
+      `Con un ingreso de ${formatCurrency(updatedContext.ingreso)}, procura que todas tus cuotas juntas no superen ${formatCurrency(maximumTotalPayment)} al mes.`,
+      `Un nivel mas comodo estaria cerca de ${formatCurrency(comfortablePayment)}. Esto es capacidad de cuota, no el monto total del prestamo: el monto depende de tasa y plazo.`,
+      "Resta de ese limite las cuotas que ya pagas. Si me das tasa, plazo y deudas actuales, calculo un monto de credito mas preciso.",
+      { income: updatedContext.ingreso, maximumTotalPayment, comfortablePayment }
     );
   }
 
@@ -1536,6 +1643,29 @@
   function buildColombiaRatesDecision(analysis) {
     const normalized = analysis.entities.normalized;
 
+    if (!analysis.entities.tasas.length && /(equivale|convertir|conversion|pasar a).{0,35}(tasa|mensual|ea|efectiva anual)|(?:tasa|mensual|ea|efectiva anual).{0,35}(equivale|convertir|conversion|pasar a)/.test(normalized)) {
+      return buildDecision(
+        "question",
+        "tasas",
+        "Que porcentaje quieres convertir?",
+        "Escribe tambien si la tasa original es mensual o EA; por ejemplo: 2% mensual a EA."
+      );
+    }
+
+    if (analysis.entities.tasas.length === 1 && /(equivale|convertir|conversion|pasar a|cuanto es|en ea|efectiva anual|mensual)/.test(normalized)) {
+      const rate = analysis.entities.tasas[0];
+      return buildDecision(
+        "direct",
+        "tasas",
+        rate.period === "mensual"
+          ? `${formatPercent(rate.percent)} mensual equivale aproximadamente a ${formatPercentFromDecimal(rate.annualDecimal)} EA.`
+          : `${formatPercent(rate.percent)} EA equivale aproximadamente a ${formatPercentFromDecimal(rate.monthlyDecimal)} mensual.`,
+        "La conversion usa capitalizacion compuesta, por eso no se obtiene multiplicando o dividiendo simplemente por 12.",
+        "Usa siempre tasas del mismo periodo antes de comparar dos opciones.",
+        { rate, monthlyDecimal: rate.monthlyDecimal, annualDecimal: rate.annualDecimal }
+      );
+    }
+
     if (isLiveRateQuestion(normalized) || /(hoy|actual|vigente|en este momento|cuanto esta)/.test(normalized)) {
       return buildDecision(
         "direct",
@@ -1700,6 +1830,10 @@
         return buildExpenseDecision(analysis, updatedContext);
       case "organizacion":
         return buildOrganizationDecision(updatedContext);
+      case "fondo_emergencia":
+        return buildEmergencyFundDecision(updatedContext);
+      case "capacidad_pago":
+        return buildDebtCapacityDecision(updatedContext);
       case "tasas":
         return (updatedContext.tasas.length >= 2 || analysis.entities.tasas.length >= 2)
           ? buildRateComparisonDecision(updatedContext.tasas.length ? updatedContext.tasas : analysis.entities.tasas)

@@ -289,6 +289,72 @@ const tests = [
       assert.equal(result.passToLegacy, true);
       assert.equal(result.response, "");
     }
+  },
+  {
+    name: "Walle calcula un fondo de emergencia con el ingreso conocido",
+    run() {
+      const base = WalleEngine.processMessage("gano 4 millones");
+      const result = WalleEngine.processMessage("cuanto necesito de fondo de emergencia", { context: base.context });
+
+      assert.equal(result.intent, "fondo_emergencia");
+      assert.equal(result.decision.data.minimumFund, 7200000);
+      assert.equal(result.decision.data.robustFund, 14400000);
+      assert.equal(result.decision.data.isEstimate, true);
+    }
+  },
+  {
+    name: "Walle separa ingreso y gasto al calcular el fondo de emergencia",
+    run() {
+      const result = WalleEngine.processMessage("gano 4 millones y gasto 2 millones al mes, cuanto necesito de fondo de emergencia");
+
+      assert.equal(result.context.ingreso, 4000000);
+      assert.equal(result.context.gastoEsencialMensual, 2000000);
+      assert.equal(result.decision.data.minimumFund, 6000000);
+      assert.equal(result.decision.data.robustFund, 12000000);
+      assert.equal(result.decision.data.isEstimate, false);
+    }
+  },
+  {
+    name: "Walle estima una cuota maxima prudente segun el ingreso",
+    run() {
+      const base = WalleEngine.processMessage("mi salario es 5 millones");
+      const result = WalleEngine.processMessage("cuanto me puedo endeudar", { context: base.context });
+
+      assert.equal(result.intent, "capacidad_pago");
+      assert.equal(result.decision.data.maximumTotalPayment, 1500000);
+      assert.equal(result.decision.data.comfortablePayment, 1000000);
+    }
+  },
+  {
+    name: "Walle convierte una tasa mensual a efectiva anual",
+    run() {
+      const result = WalleEngine.processMessage("cuanto es 2% mensual en EA");
+
+      assert.equal(result.intent, "tasas");
+      assert.ok(result.decision.data.annualDecimal > 0.26);
+      assert.ok(result.response.includes("EA"));
+    }
+  },
+  {
+    name: "Walle pide el porcentaje al iniciar una conversion guiada",
+    run() {
+      const result = WalleEngine.processMessage("cuanto equivale una tasa mensual en EA");
+
+      assert.equal(result.intent, "tasas");
+      assert.equal(result.decision.type, "question");
+      assert.ok(result.response.toLowerCase().includes("porcentaje"));
+    }
+  },
+  {
+    name: "Walle advierte cuando una cuota supera la capacidad prudente",
+    run() {
+      const base = WalleEngine.processMessage("gano 2 millones");
+      const result = WalleEngine.processMessage("credito de 10 millones al 2% mensual a 12 meses", { context: base.context });
+
+      assert.equal(result.intent, "credito");
+      assert.equal(result.decision.data.affordable, false);
+      assert.ok(result.decision.data.paymentToIncome > 0.30);
+    }
   }
 ];
 

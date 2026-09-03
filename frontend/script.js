@@ -28,130 +28,98 @@ const walleConversationState = {
 
 const WALLE_QUICK_PROMPTS = [
   { key: "ahorro", number: "1", label: "Ahorro", prompt: "Ahorro" },
-  { key: "gastos", number: "2", label: "Gastos", prompt: "Gastos" },
-  { key: "ingresos", number: "3", label: "Ingresos", prompt: "Ingresos" },
+  { key: "movimientos", number: "2", label: "Movimientos", prompt: "Movimientos" },
+  { key: "diagnostico", number: "3", label: "Mi diagnóstico", prompt: "analiza mis finanzas", direct: true },
   { key: "deudas", number: "4", label: "Deudas", prompt: "Deudas" },
-  { key: "tarjetas", number: "5", label: "Tarjetas", prompt: "Tarjetas" }
+  { key: "credito", number: "5", label: "Crédito", prompt: "Crédito" },
+  { key: "tarjetas", number: "6", label: "Tarjetas", prompt: "Tarjetas" }
 ];
 
 const WALLE_GUIDED_MODULES = {
   ahorro: {
     aliases: ["1", "ahorro", "ahorrar", "quiero ahorrar", "meta de ahorro"],
     buttons: [
-      { number: "1", label: "Crear meta" },
-      { number: "2", label: "Registrar ahorro" },
-      { number: "3", label: "Ver progreso" },
-      { number: "4", label: "Consejos" }
+      { number: "1", label: "Nueva meta", action: { type: "open_goal" } },
+      { number: "2", label: "Ver progreso", prompt: "analiza mis metas" },
+      { number: "3", label: "Cuánto ahorrar", prompt: "cuanto debo ahorrar al mes" },
+      { number: "4", label: "Fondo de emergencia", prompt: "cuanto necesito de fondo de emergencia" }
     ],
     response: [
       "¡Excelente! Vamos a trabajar en tus ahorros.",
       "¿Deseas:",
-      "1. Crear una meta de ahorro",
-      "2. Registrar dinero ahorrado",
-      "3. Ver tu progreso",
-      "4. Recibir consejos"
-    ].join("\n"),
-    options: {
-      "1": "Perfecto. ¿Cuál es el nombre de tu meta? Ejemplo: Viaje, Moto, Emergencia o PC Gamer.",
-      "2": "Listo. ¿Cuánto dinero ahorraste y para qué meta quieres registrarlo?",
-      "3": "Para ver tu progreso, puedo revisar tus metas registradas y tus aportes. También puedes decirme: analiza mis metas.",
-      "4": "Consejo rápido: separa el ahorro apenas recibas ingresos. Si me dices cuánto ganas, te calculo una meta mensual realista."
-    }
+      "1. Crear una meta en la app",
+      "2. Revisar el progreso de tus metas",
+      "3. Calcular cuánto ahorrar al mes",
+      "4. Calcular tu fondo de emergencia"
+    ].join("\n")
   },
-  gastos: {
-    aliases: ["2", "gasto", "gastos", "quiero registrar un gasto", "registre un gasto"],
+  movimientos: {
+    aliases: ["2", "movimiento", "movimientos", "gastos e ingresos"],
     buttons: [
-      { number: "1", label: "Registrar gasto" },
-      { number: "2", label: "Resumen mensual" },
-      { number: "3", label: "Categorías" },
-      { number: "4", label: "Consejos" }
+      { number: "1", label: "Registrar gasto", action: { type: "open_movement", movementType: "gasto" } },
+      { number: "2", label: "Registrar ingreso", action: { type: "open_movement", movementType: "ingreso" } },
+      { number: "3", label: "Resumen mensual", prompt: "analiza mis finanzas" },
+      { number: "4", label: "Categorías", action: { type: "open_categories" } }
     ],
     response: [
-      "Vamos a registrar o revisar tus gastos.",
+      "Registra o revisa el dinero que entra y sale.",
       "¿Deseas:",
       "1. Registrar gasto",
-      "2. Ver resumen mensual",
-      "3. Categorías de gasto",
-      "4. Consejos de ahorro"
-    ].join("\n"),
-    options: {
-      "1": "Claro. ¿Cuánto gastaste y en qué categoría fue? Ejemplo: gasté 20 mil en comida.",
-      "2": "Puedo ayudarte con tu resumen. Escribe: analiza mis gastos o genera mi reporte.",
-      "3": "Puedes usar categorías como comida, transporte, entretenimiento, servicios, salud, educación u otros.",
-      "4": "Consejo rápido: revisa gastos pequeños repetidos. Ahí suelen aparecer fugas sin que se noten."
-    }
-  },
-  ingresos: {
-    aliases: ["3", "ingreso", "ingresos", "me pagaron", "registrar ingreso"],
-    buttons: [
-      { number: "1", label: "Registrar ingreso" },
-      { number: "2", label: "Ingresos del mes" },
-      { number: "3", label: "Comparar" },
-      { number: "4", label: "Consejos" }
-    ],
-    response: [
-      "Gestión de ingresos.",
-      "¿Deseas:",
-      "1. Registrar ingreso",
-      "2. Ver ingresos del mes",
-      "3. Comparar ingresos y gastos",
-      "4. Consejos financieros"
-    ].join("\n"),
-    options: {
-      "1": "Perfecto. ¿Cuánto dinero recibiste y cuál fue la fuente? Ejemplo: me pagaron 1.800.000 de salario.",
-      "2": "Para ver tus ingresos del mes, puedes pedirme: analiza mis ingresos.",
-      "3": "Puedo compararlos con tus gastos. Escribe: analiza mis finanzas.",
-      "4": "Consejo rápido: separa ingresos fijos, variables y extras para no gastar como si todo fuera seguro."
-    }
+      "2. Registrar ingreso",
+      "3. Ver tu resumen mensual",
+      "4. Gestionar categorías"
+    ].join("\n")
   },
   deudas: {
     aliases: ["4", "deuda", "deudas", "tengo deudas", "tengo muchas deudas"],
     buttons: [
-      { number: "1", label: "Registrar deuda" },
-      { number: "2", label: "Ver deudas" },
-      { number: "3", label: "Registrar pago" },
-      { number: "4", label: "Consejos" }
+      { number: "1", label: "Ordenar deudas", prompt: "quiero ordenar mis deudas" },
+      { number: "2", label: "Unificar deudas", prompt: "quiero saber si me conviene unificar mis deudas" },
+      { number: "3", label: "Capacidad de pago", prompt: "cuanto me puedo endeudar" },
+      { number: "4", label: "Plan para pagarlas", prompt: "como puedo salir de mis deudas" }
     ],
     response: [
-      "Entiendo. Vamos a registrar o revisar tus deudas.",
+      "Vamos a tomar una decisión concreta sobre tus deudas.",
       "¿Deseas:",
-      "1. Registrar deuda",
-      "2. Ver deudas",
-      "3. Registrar pago",
-      "4. Consejos para salir de deudas"
-    ].join("\n"),
-    options: {
-      "1": "Vamos por partes. ¿A quién le debes y cuánto debes?",
-      "2": "Puedo ayudarte a ordenarlas si me das monto, tasa y fecha de pago de cada una.",
-      "3": "Listo. ¿Qué deuda pagaste y cuánto abonaste?",
-      "4": "Consejo rápido: prioriza deudas con intereses altos y evita tomar deuda nueva mientras te estabilizas."
-    }
+      "1. Ordenarlas por costo",
+      "2. Evaluar una unificación",
+      "3. Calcular tu capacidad de pago",
+      "4. Armar un plan para pagarlas"
+    ].join("\n")
+  },
+  credito: {
+    aliases: ["5", "credito", "crédito", "prestamo", "préstamo"],
+    buttons: [
+      { number: "1", label: "Calcular cuota", prompt: "quiero calcular la cuota de un credito" },
+      { number: "2", label: "Comparar tasas", prompt: "quiero comparar tasas de credito" },
+      { number: "3", label: "Cuánto puedo pagar", prompt: "cuanto me puedo endeudar" },
+      { number: "4", label: "Convertir tasa", prompt: "cuanto equivale una tasa mensual en EA" }
+    ],
+    response: [
+      "Revisemos el crédito antes de aceptarlo.",
+      "¿Deseas:",
+      "1. Calcular cuota e intereses",
+      "2. Comparar dos tasas",
+      "3. Estimar una cuota prudente",
+      "4. Convertir tasa mensual a EA"
+    ].join("\n")
   },
   tarjetas: {
-    aliases: ["5", "tarjeta", "tarjetas", "tarjeta de credito", "tarjetas de credito"],
+    aliases: ["6", "tarjeta", "tarjetas", "tarjeta de credito", "tarjetas de credito"],
     buttons: [
-      { number: "1", label: "Registrar tarjeta" },
-      { number: "2", label: "Ver cupo" },
-      { number: "3", label: "Registrar compra" },
-      { number: "4", label: "Fecha de corte" },
-      { number: "5", label: "Fecha de pago" }
+      { number: "1", label: "Uso responsable", prompt: "como usar bien una tarjeta de credito" },
+      { number: "2", label: "Pago mínimo", prompt: "que pasa si pago solo el minimo de la tarjeta" },
+      { number: "3", label: "Registrar compra", action: { type: "open_movement", movementType: "gasto" } },
+      { number: "4", label: "Corte y pago", prompt: "cual es la diferencia entre fecha de corte y fecha limite de pago" }
     ],
     response: [
-      "Gestión de tarjetas.",
+      "Usa tu tarjeta sin perder el control.",
       "¿Deseas:",
-      "1. Registrar tarjeta",
-      "2. Ver cupo disponible",
-      "3. Registrar compra",
-      "4. Ver fecha de corte",
-      "5. Ver fecha de pago"
-    ].join("\n"),
-    options: {
-      "1": "Perfecto. ¿La tarjeta es crédito o débito, de qué banco es y cuál es el cupo total?",
-      "2": "Para estimar cupo disponible, dime cupo total y cuánto has usado.",
-      "3": "Claro. ¿Cuánto fue la compra, en qué categoría y con qué tarjeta?",
-      "4": "Dime el banco o la tarjeta y la fecha de corte si la recuerdas.",
-      "5": "Dime la fecha límite de pago y te ayudo a organizar recordatorio mental o consejo de pago."
-    }
+      "1. Revisar buenas prácticas",
+      "2. Entender el pago mínimo",
+      "3. Registrar una compra",
+      "4. Entender corte y fecha límite"
+    ].join("\n")
   }
 };
 
@@ -1639,6 +1607,7 @@ function resetWalleConversationState() {
   walleConversationState.followUpDepth = 0;
   walleConversationState.lastQuestion = "";
   walleConversationState.messages = [];
+  walleConversationState.guidedModule = "";
 }
 
 function resetWalleConversationForUser() {
@@ -3744,28 +3713,73 @@ function getWalleGuidedModuleFromText(text) {
   if (!normalized) return null;
 
   return Object.entries(WALLE_GUIDED_MODULES).find(([, module]) =>
-    module.aliases.some((alias) => normalized === normalizeWalleText(alias) || normalized.includes(normalizeWalleText(alias)))
+    module.aliases.some((alias) => normalized === normalizeWalleText(alias))
   )?.[0] || null;
 }
 
-function getWalleGuidedResponse(question) {
+function getWalleGuidedResult(question) {
   const normalized = normalizeWalleText(question);
   const currentModule = walleConversationState.guidedModule;
 
   if (["menu", "menú", "inicio", "volver", "temas"].includes(normalized) || isPureGreeting(normalized)) {
     walleConversationState.guidedModule = "";
-    return tx("walleGreeting");
+    return { response: tx("walleGreeting"), prompt: "", action: null };
   }
 
-  if (currentModule && /^[1-5]$/.test(normalized)) {
-    return WALLE_GUIDED_MODULES[currentModule]?.options?.[normalized] || "";
+  if (currentModule && /^\d$/.test(normalized)) {
+    const selected = WALLE_GUIDED_MODULES[currentModule]?.buttons?.find((item) => item.number === normalized);
+    if (!selected) {
+      return { response: "Esa opción no está disponible en este menú.", prompt: "", action: null };
+    }
+    walleConversationState.guidedModule = "";
+    return {
+      response: "",
+      prompt: selected.prompt || "",
+      action: selected.action || null
+    };
   }
 
   const moduleKey = getWalleGuidedModuleFromText(question);
-  if (!moduleKey) return "";
+  if (!moduleKey) return { response: "", prompt: "", action: null };
 
   walleConversationState.guidedModule = moduleKey;
-  return WALLE_GUIDED_MODULES[moduleKey].response;
+  return { response: WALLE_GUIDED_MODULES[moduleKey].response, prompt: "", action: null };
+}
+
+function executeWalleGuidedAction(action) {
+  if (!action?.type) return "No pude abrir esa opción. Intenta de nuevo.";
+
+  if (action.type === "open_goal") {
+    setTimeout(() => {
+      cerrarModalGenerico("modalWalleChat");
+      mostrar("metas");
+      abrirModalMeta();
+    }, 320);
+    return "Abrí el formulario de meta. Completa nombre, monto y fecha para guardarla.";
+  }
+
+  if (action.type === "open_movement") {
+    setTimeout(() => {
+      cerrarModalGenerico("modalWalleChat");
+      abrirModal();
+      const typeSelect = document.getElementById("tipo");
+      if (typeSelect) typeSelect.value = action.movementType === "ingreso" ? "ingreso" : "gasto";
+      actualizarTipoSegunCategoria();
+    }, 320);
+    return action.movementType === "ingreso"
+      ? "Abrí el formulario de ingreso. Elige categoría, monto, fecha y descripción."
+      : "Abrí el formulario de gasto. Elige categoría, monto, fecha y descripción.";
+  }
+
+  if (action.type === "open_categories") {
+    setTimeout(() => {
+      cerrarModalGenerico("modalWalleChat");
+      abrirCategorias();
+    }, 320);
+    return "Abrí la gestión de categorías para que puedas crear o revisar las tuyas.";
+  }
+
+  return "No pude abrir esa opción. Intenta de nuevo.";
 }
 
 function getWalleQuickActionItems(moduleKey = "") {
@@ -3806,9 +3820,9 @@ function appendWalleGuidedOptions(moduleKey = "") {
   getWalleQuickActionItems(moduleKey).forEach((item) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = `${item.number}. ${item.label}`;
+    button.textContent = item.number === "↩" ? `↩ ${item.label}` : `${item.number}. ${item.label}`;
     button.title = item.label;
-    button.addEventListener("click", () => enviarPreguntaWalleDesdeTexto(item.prompt));
+    button.addEventListener("click", () => enviarPreguntaWalleDesdeTexto(item.prompt, item.label));
     options.appendChild(button);
   });
 
@@ -3842,13 +3856,14 @@ function abrirChatWalle() {
   }
 }
 
-function enviarPreguntaWalleDesdeTexto(question) {
+function enviarPreguntaWalleDesdeTexto(question, displayText = "") {
   const input = document.getElementById("walleQuestionInput");
   const normalizedQuestion = String(question || "").trim();
+  const visibleQuestion = String(displayText || normalizedQuestion).trim();
   if (!normalizedQuestion) return;
 
-  appendWalleChatMessage("user", normalizedQuestion);
-  saveWalleHistoryEntry("user", normalizedQuestion, {
+  appendWalleChatMessage("user", visibleQuestion);
+  saveWalleHistoryEntry("user", visibleQuestion, {
     intent: lastIntent?.intent || null,
     subintent: lastSubintent?.intent || null,
     incomeAmount: extractWalleIncomeAmount(normalizedQuestion) || getRememberedIncome()
@@ -3856,11 +3871,14 @@ function enviarPreguntaWalleDesdeTexto(question) {
   if (input) input.value = "";
 
   setTimeout(async () => {
-    const guidedResponse = getWalleGuidedResponse(normalizedQuestion);
-    const rawResponse = guidedResponse || await getWalleResponse(normalizedQuestion);
-    const response = finalizeWalleOutgoingResponse(normalizedQuestion, rawResponse);
+    const guidedResult = getWalleGuidedResult(normalizedQuestion);
+    const effectiveQuestion = guidedResult.prompt || normalizedQuestion;
+    const rawResponse = guidedResult.action
+      ? executeWalleGuidedAction(guidedResult.action)
+      : guidedResult.response || await getWalleResponse(effectiveQuestion);
+    const response = finalizeWalleOutgoingResponse(effectiveQuestion, rawResponse);
     appendWalleChatMessage("bot", response);
-    if (guidedResponse || isPureGreeting(normalizedQuestion)) {
+    if (!guidedResult.action) {
       appendWalleGuidedOptions(walleConversationState.guidedModule);
     }
     saveWalleHistoryEntry("bot", response, {
