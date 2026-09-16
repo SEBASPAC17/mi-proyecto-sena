@@ -185,3 +185,5 @@ Material de apoyo:
 - Implementar panel administrativo o analítica de uso.
 - Incorporar presupuestos mensuales automáticos.
 - Notificaciones programadas para metas.
+
+Evidencia GA7: proyecto versionado con Git local y remoto.
