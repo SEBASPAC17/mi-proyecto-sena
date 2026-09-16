@@ -186,4 +186,4 @@ Material de apoyo:
 - Incorporar presupuestos mensuales automáticos.
 - Notificaciones programadas para metas.
 
-Evidencia GA7: proyecto versionado con Git local y remoto.
+HELLO
